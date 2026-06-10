@@ -123,6 +123,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC'
     <div class="fgroup"><label>日期</label><input type="date" id="invDate"></div>
     <div class="fgroup"><label>单号</label><input type="text" id="invNo" placeholder="自动"></div>
   </div>
+  <div class="fgroup"><label>抬头</label><input type="text" id="titleText" value="盛海鱿鱼销售单" placeholder="销售单抬头"></div>
   <div class="row2">
     <div class="fgroup"><label>客户名称</label><input type="text" id="custName" placeholder="客户名称"></div>
     <div class="fgroup"><label>备注</label><input type="text" id="custNote" placeholder="客户备注"></div>
@@ -392,6 +393,7 @@ function resetForm(){
   document.getElementById('salesPerson').value='';
   document.getElementById('shipper').value='';
   document.getElementById('handler').value='';
+  // Don't reset title - user's custom name
   document.getElementById('invNo').value='SH'+Date.now().toString(36).toUpperCase().slice(-5);
   nextId=1;
   document.getElementById('items-tbody').innerHTML='';
@@ -414,6 +416,7 @@ function generatePreview(){
   var dt=document.getElementById('invDate').value||'____年__月__日';
   var no=document.getElementById('invNo').value||'________';
   var cn=document.getElementById('custName').value||'________';
+  var titleText=document.getElementById('titleText').value||'盛海鱿鱼销售单';
   var cnote=document.getElementById('custNote').value||'';
   var sp=document.getElementById('salesPerson').value||'________';
   var sh=document.getElementById('shipper').value||'________';
@@ -442,7 +445,7 @@ function generatePreview(){
   var cnStr=numToChinese(t);
   
   var h='';
-  h+='<div class="p-title">盛海鱿鱼销售单</div>';
+  h+='<div class="p-title">'+titleText+'</div>';
   h+='<div class="p-eng">SHENGHAI SEAFOOD SALES ORDER</div>';
   
   // Unified grid table
