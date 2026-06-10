@@ -46,7 +46,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC'
 #items-table .col-name{width:100px}#items-table .col-name input{text-align:left}
 #items-table .col-spec{width:68px}
 #items-table .col-unit{width:52px}
-#items-table .col-qty{width:100px}
+#items-table .col-qty{width:56px}
 #items-table .col-price{width:68px}
 #items-table .col-amt{width:80px}
 #items-table .col-note{width:80px}#items-table .col-note input{text-align:left}
@@ -78,12 +78,12 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC'
 .btn.danger{background:transparent;color:var(--red)}
 
 /* Preview — check-style landscape rectangle */
-#preview-wrap{display:none;background:#e8e8e8;padding:12px 8px}
+#preview-wrap{display:none;background:#e8e8e8;padding:20px 8px}
 #preview-card{
   max-width:900px;margin:0 auto;background:#fff;
   /* Check proportions: roughly 2.5:1 landscape */
   aspect-ratio:auto;min-height:360px;
-  padding:18px 20px 14px;position:relative;
+  padding:20px 24px 16px;position:relative;
   font-family:'PingFang SC','Microsoft YaHei',sans-serif;font-size:12px;
   line-height:1.6;color:#000;
   border:1px solid #ccc;
@@ -110,7 +110,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC'
   body,#preview-wrap{background:#fff}
   #tabs,#form,.preview-actions{display:none!important}
   #preview-wrap{display:block!important;padding:0}
-  #preview-card{box-shadow:none;border:1px solid #000;padding:12px 16px;max-width:100%;aspect-ratio:auto;min-height:auto}
+  #preview-card{padding:12px 16px;max-width:100%}
 }
 </style>
 </head>
@@ -182,8 +182,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC'
   <div id="preview-card"></div>
   <div class="preview-actions">
     <button class="btn secondary" onclick="switchTab('form')">← 返回修改</button>
-    <button class="btn primary" onclick="saveAsImage()">💾 保存图片</button>
-    <button class="btn primary" onclick="window.print()" style="background:#34C759">🖨 打印</button>
+    <button class="btn primary" onclick="window.print()">🖨 打印 / 截图</button>
   </div>
 </div>
 
@@ -367,7 +366,7 @@ function addItemRow(id,name){
     '<td class="col-name"><input type="text" value="'+(name||'')+'" placeholder="商品名"></td>'+
     '<td class="col-spec"><input type="text" placeholder="规格"></td>'+
     '<td class="col-unit"><select><option>斤</option><option>公斤</option><option>件</option><option>箱</option><option>袋</option><option>只</option><option>条</option><option>盒</option><option>包</option></select></td>'+
-    '<td class="col-qty" style="white-space:nowrap"><button class="qty-btn" onclick="adjQty(this,-1)" style="width:22px;height:22px;border-radius:11px;border:none;background:#E5E5EA;font-size:14px;line-height:1;cursor:pointer;flex-shrink:0">−</button><input type="number" value="1" min="0" step="0.1" style="width:36px;text-align:center;margin:0 2px"><button class="qty-btn" onclick="adjQty(this,1)" style="width:22px;height:22px;border-radius:11px;border:none;background:#E5E5EA;font-size:14px;line-height:1;cursor:pointer;flex-shrink:0">+</button></td>'+
+    '<td class="col-qty"><input type="number" value="1" min="0.1" step="0.1"></td>'+
     '<td class="col-price"><input type="number" value="0" step="0.01" min="0"></td>'+
     '<td class="col-amt"><div class="line-amt">¥0</div></td>'+
     '<td class="col-note"><input type="text" placeholder="备注"></td>'+
@@ -382,13 +381,6 @@ function delItem(btn){
   btn.closest('tr').remove();calcTotals()
 }
 
-function adjQty(btn,delta){
-  var inp=btn.parentElement.querySelector('input[type="number"]');
-  var v=parseFloat(inp.value)||0;
-  v=Math.max(0,parseFloat((v+delta).toFixed(1)));
-  inp.value=v;
-  calcTotals();
-}
 function calcTotals(){
   var t=0;
   document.querySelectorAll('#items-tbody tr').forEach(function(r){
@@ -483,6 +475,5 @@ function generatePreview(){
 
 addItemRow(pad5(nextId),'');nextId++;calcTotals();
 </script>
-<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 </body>
 </html>
