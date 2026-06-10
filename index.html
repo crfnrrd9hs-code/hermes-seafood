@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<title>地推地图</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#F2F2F7">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#F2F2F7;--card:#FFFFFF;--text:#1C1C1E;--sec:#6E6E73;--blue:#007AFF;--green:#34C759}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;padding:env(safe-area-inset-top) 16px env(safe-area-inset-bottom)}
+.header{padding:40px 0 24px;text-align:center}
+.header h1{font-size:32px;font-weight:700;letter-spacing:-0.5px}
+.header p{font-size:15px;color:var(--sec);margin-top:4px}
+.cities{display:flex;flex-direction:column;gap:12px}
+.city-card{
+  display:block;background:var(--card);border-radius:16px;padding:20px;
+  text-decoration:none;color:var(--text);box-shadow:0 2px 8px rgba(0,0,0,0.04);
+  transition:all 0.2s
+}
+.city-card:active{transform:scale(0.98);background:#F2F2F7}
+.city-card .city-name{font-size:20px;font-weight:600;letter-spacing:-0.3px}
+.city-card .city-stats{font-size:14px;color:var(--sec);margin-top:4px}
+.city-card .chain-row{display:flex;flex-wrap:wrap;gap:4px 6px;margin-top:10px}
+.chain-badge{
+  font-size:11px;font-weight:500;padding:3px 8px;border-radius:8px;
+  background:#F2F2F7;color:#3C3C43
+}
+.chain-badge.none{opacity:0.35;color:#FF3B30}
+.city-card .arrow{float:right;font-size:20px;color:var(--blue);margin-top:-2px}
+.footer{text-align:center;padding:30px 0;font-size:12px;color:var(--sec)}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🗺️ 地推地图</h1>
+  <p>选择一个城市开始</p>
+</div>
+
+<div class="cities">
+  <a href="/route.html" class="city-card">
+    <span class="arrow">›</span>
+    <div class="city-name">Jackson, MS</div>
+    <div class="city-stats">29家店 · 8/12连锁</div>
+    <div class="chain-row">
+      <span class="chain-badge">Family Dollar 12</span>
+      <span class="chain-badge">Dollar Tree 3</span>
+      <span class="chain-badge">Dollar General 3</span>
+      <span class="chain-badge">Lowe's 2</span>
+      <span class="chain-badge">Target 2</span>
+      <span class="chain-badge">Home Depot 2</span>
+      <span class="chain-badge">Whole Foods 1</span>
+      <span class="chain-badge none">Lululemon 0</span>
+      <span class="chain-badge none">Hy-Vee 0</span>
+      <span class="chain-badge none">Macy's 0</span>
+    </div>
+  </a>
+
+  <a href="/springfield.html" class="city-card">
+    <span class="arrow">›</span>
+    <div class="city-name">Springfield, MO</div>
+    <div class="city-stats">28家店 · 10/12连锁</div>
+    <div class="chain-row">
+      <span class="chain-badge">Dollar General 10</span>
+      <span class="chain-badge">Dollar Tree 4</span>
+      <span class="chain-badge">Family Dollar 4</span>
+      <span class="chain-badge">Target 2</span>
+      <span class="chain-badge">Lowe's 2</span>
+      <span class="chain-badge">Home Depot 2</span>
+      <span class="chain-badge">Hy-Vee 1</span>
+      <span class="chain-badge">Macy's 1</span>
+      <span class="chain-badge none">Lululemon 0</span>
+      <span class="chain-badge none">Whole Foods 0</span>
+    </div>
+  </a>
+
+  <a href="/memphis.html" class="city-card">
+    <span class="arrow">›</span>
+    <div class="city-name">Memphis, TN</div>
+    <div class="city-stats">66家店 · 11/12连锁</div>
+    <div class="chain-row">
+      <span class="chain-badge">Dollar General 15</span>
+      <span class="chain-badge">Dollar Tree 12</span>
+      <span class="chain-badge">Family Dollar 12</span>
+      <span class="chain-badge">Home Depot 6</span>
+      <span class="chain-badge">Lowe's 5</span>
+      <span class="chain-badge">Target 4</span>
+      <span class="chain-badge">Best Buy 3</span>
+      <span class="chain-badge">Macy's 3</span>
+      <span class="chain-badge">Sephora 3</span>
+      <span class="chain-badge">Whole Foods 2</span>
+      <span class="chain-badge">Lululemon 1</span>
+      <span class="chain-badge none">Hy-Vee 0</span>
+    </div>
+  </a>
+</div>
+
+<div class="footer">员工打开这个首页，点城市进地图</div>
+
+</body>
+</html>

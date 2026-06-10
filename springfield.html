@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<title>Springfield</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiB2aWV3Qm94PSIwIDAgMTkyIDE5MiI+PHJlY3Qgd2lkdGg9IjE5MiIgaGVpZ2h0PSIxOTIiIHJ4PSI0MCIgZmlsbD0iIzAwN0FGRiIvPjx0ZXh0IHg9Ijk2IiB5PSIxMTYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iNzIiIGZpbGw9IndoaXRlIj7wn46vPC90ZXh0Pjwvc3ZnPg==">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiB2aWV3Qm94PSIwIDAgMTkyIDE5MiI+PHJlY3Qgd2lkdGg9IjE5MiIgaGVpZ2h0PSIxOTIiIHJ4PSI0MCIgZmlsbD0iIzAwN0FGRiIvPjx0ZXh0IHg9Ijk2IiB5PSIxMTYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iNzIiIGZpbGw9IndoaXRlIj7wn46vPC90ZXh0Pjwvc3ZnPg==">
+<meta name="theme-color" content="#F2F2F7">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Springfield">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#F2F2F7;--card:#FFFFFF;--text:#1C1C1E;--sec:#6E6E73;--ter:#AEAEB2;
+  --blue:#007AFF;--green:#34C759;--orange:#FF9500;--red:#FF3B30;
+  --teal:#5AC8FA;--pink:#FF2D55;--indigo:#5856D6
+}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',sans-serif;background:var(--bg);color:var(--text);overflow:hidden;-webkit-font-smoothing:antialiased;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0}
+#app{display:flex;flex-direction:column;height:100%}
+
+/* Header */
+#header{
+  background:rgba(242,242,247,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  padding:12px 16px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;
+  border-bottom:0.5px solid rgba(0,0,0,0.1);z-index:100
+}
+#header .title{font-size:20px;font-weight:700;letter-spacing:-0.3px;color:var(--text)}
+#header .sub{font-size:12px;color:var(--sec);margin-top:1px}
+.hbtn{
+  width:36px;height:36px;border-radius:18px;border:none;background:rgba(0,0,0,0.05);
+  font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all 0.15s;color:var(--blue)
+}
+.hbtn:active{background:rgba(0,0,0,0.12);transform:scale(0.95)}
+.hbtn.on{background:var(--blue);color:#fff}
+.hbtn.gps{background:var(--blue);color:#fff;animation:gpsPulse 2s infinite}
+@keyframes gpsPulse{0%,100%{box-shadow:0 0 0 0 rgba(0,122,255,0.4)}50%{box-shadow:0 0 0 10px rgba(0,122,255,0)}}
+
+/* Apple note banner */
+#apple-banner{
+  background:var(--card);padding:8px 16px;flex-shrink:0;font-size:11px;color:var(--sec);
+  display:flex;align-items:center;gap:6px;border-bottom:0.5px solid rgba(0,0,0,0.06)
+}
+#apple-banner .dot{width:6px;height:6px;background:var(--pink);border-radius:50%}
+
+/* Location bar */
+#loc-bar{
+  display:none;background:rgba(255,255,255,0.9);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  padding:10px 16px;flex-shrink:0;font-size:13px;justify-content:space-between;align-items:center;
+  border-bottom:0.5px solid rgba(0,0,0,0.06)
+}
+#loc-bar .next-info{font-weight:600;color:var(--text)}
+#loc-bar .dist-info{font-size:12px;color:var(--sec)}
+
+/* Map */
+#map{flex:1;min-height:0;z-index:1}
+
+/* Pull-up panel */
+#panel{
+  position:absolute;bottom:0;left:0;right:0;z-index:1000;
+  background:rgba(255,255,255,0.92);backdrop-filter:blur(25px);-webkit-backdrop-filter:blur(25px);
+  border-radius:20px 20px 0 0;box-shadow:0 -4px 20px rgba(0,0,0,0.08);
+  max-height:55vh;display:flex;flex-direction:column;transition:transform 0.35s cubic-bezier(0.22,1,0.36,1)
+}
+#panel.collapsed{transform:translateY(calc(100% - 80px))}
+#panel-handle{
+  padding:14px 0;display:flex;justify-content:center;flex-shrink:0;cursor:pointer
+}
+#panel-handle .bar{width:36px;height:4px;background:rgba(0,0,0,0.2);border-radius:2px}
+
+#panel-header{
+  padding:0 16px 12px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0
+}
+#panel-header .ph-title{font-size:17px;font-weight:600;letter-spacing:-0.2px}
+#panel-header .ph-count{font-size:13px;color:var(--sec)}
+
+/* Segmented control */
+#segmented{
+  display:flex;padding:0 16px 12px;gap:0;flex-shrink:0
+}
+.seg-btn{
+  flex:1;padding:6px 0;font-size:12px;font-weight:500;text-align:center;
+  background:rgba(0,0,0,0.04);color:var(--sec);border:none;cursor:pointer;
+  transition:all 0.2s
+}
+.seg-btn:first-child{border-radius:8px 0 0 8px}
+.seg-btn:last-child{border-radius:0 8px 8px 0}
+.seg-btn.active{background:var(--text);color:#fff}
+
+/* Chain summary bar */
+#chain-summary{
+  display:flex;flex-wrap:wrap;gap:4px 8px;padding:0 16px 8px;flex-shrink:0
+}
+.chain-tag{
+  font-size:11px;font-weight:500;padding:4px 10px;border-radius:12px;
+  background:#F2F2F7;color:#3C3C43;white-space:nowrap
+}
+.chain-tag .ct-count{font-weight:700}
+/* Store list */
+#store-list{flex:1;overflow-y:auto;padding:0 16px 16px;-webkit-overflow-scrolling:touch}
+
+.store-card{
+  display:flex;align-items:center;padding:12px 14px;margin:6px 0;
+  background:var(--card);border-radius:14px;gap:12px;cursor:pointer;
+  box-shadow:0 1px 3px rgba(0,0,0,0.04);transition:all 0.15s
+}
+.store-card:active{transform:scale(0.98);background:#F2F2F7}
+.store-card.done{opacity:0.4}
+.store-card .tag-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.store-card .num{font-size:13px;font-weight:600;color:var(--sec);min-width:20px;flex-shrink:0}
+.store-card .info{flex:1;min-width:0}
+.store-card .s-name{font-size:15px;font-weight:500;letter-spacing:-0.2px}
+.store-card .s-addr{font-size:12px;color:var(--sec);margin-top:2px}
+.store-card .s-dist{font-size:13px;color:var(--blue);font-weight:500;flex-shrink:0}
+.store-card .s-nav{
+  width:32px;height:32px;border-radius:16px;background:var(--blue);color:#fff;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;
+  transition:all 0.15s;text-decoration:none
+}
+.store-card .s-nav:active{transform:scale(0.9)}
+.store-card .s-done{
+  width:32px;height:32px;border-radius:16px;border:2px solid #D1D1D6;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:14px;
+  transition:all 0.2s;color:transparent;cursor:pointer
+}
+.store-card .s-done.yes{background:var(--green);border-color:var(--green);color:#fff}
+
+/* Map popup */
+.apop{font-family:-apple-system,sans-serif;font-size:15px;min-width:220px;line-height:1.4}
+.apop b{font-size:17px;font-weight:600;letter-spacing:-0.2px;color:#1C1C1E}
+.apop .row{display:flex;gap:8px;margin-top:10px}
+.abtn{
+  flex:1;text-align:center;padding:12px 0;border-radius:12px;
+  font-size:14px;font-weight:600;text-decoration:none;color:#fff;
+  display:inline-block
+}
+.abtn.nav{background:var(--blue)}.abtn.view{background:var(--green)}.abtn.note-btn{background:var(--indigo)}
+
+/* Leaflet popup override - ensure readability */
+.leaflet-popup-content-wrapper{background:#FFFFFF!important;border-radius:16px!important;box-shadow:0 8px 30px rgba(0,0,0,0.15)!important}
+.leaflet-popup-content{margin:14px 16px!important;line-height:1.5!important}
+.leaflet-popup-tip{background:#FFFFFF!important}
+.leaflet-container a{color:#007AFF!important}
+/* Map loading state */
+#map.loading::after{
+  content:'加载地图...';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  background:rgba(255,255,255,0.9);padding:12px 24px;border-radius:12px;font-size:14px;
+  color:#3C3C43;z-index:1000;font-family:-apple-system,sans-serif
+}
+/* Toast */
+.toast{
+  position:fixed;top:100px;left:50%;transform:translateX(-50%);z-index:9999;
+  background:rgba(0,0,0,0.8);color:#fff;padding:10px 22px;border-radius:20px;
+  font-size:13px;font-weight:500;opacity:0;transition:opacity 0.3s;pointer-events:none
+}
+.toast.show{opacity:1}
+
+/* Modal */
+.modal-overlay{
+  position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;
+  background:rgba(0,0,0,0.4);display:none;align-items:center;justify-content:center
+}
+.modal-overlay.show{display:flex}
+.modal-sheet{
+  background:var(--card);border-radius:20px;padding:20px;width:90%;max-width:360px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.15)
+}
+.modal-sheet h3{font-size:18px;font-weight:600;margin-bottom:4px;letter-spacing:-0.3px}
+.modal-sheet .md-sub{font-size:13px;color:var(--sec);margin-bottom:12px}
+.modal-sheet input,.modal-sheet textarea{
+  width:100%;padding:12px;border-radius:10px;border:none;background:#F2F2F7;
+  font-size:14px;margin-bottom:8px;font-family:inherit;color:var(--text);outline:none
+}
+.modal-sheet textarea{height:70px;resize:vertical}
+.modal-sheet .mbtns{display:flex;gap:8px;justify-content:flex-end;margin-top:4px}
+.mbtn{
+  padding:10px 22px;border-radius:20px;border:none;font-size:14px;font-weight:600;
+  cursor:pointer;transition:all 0.15s
+}
+.mbtn:active{transform:scale(0.95)}
+.mbtn.primary{background:var(--blue);color:#fff}
+.mbtn.secondary{background:#F2F2F7;color:var(--text)}
+.mbtn.danger{background:var(--red);color:#fff}
+
+/* Legend on map */
+.legend{
+  position:absolute;bottom:70px;left:12px;z-index:99;
+  background:rgba(255,255,255,0.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  padding:8px 12px;border-radius:12px;font-size:10px;color:var(--text);
+  box-shadow:0 2px 10px rgba(0,0,0,0.06);display:flex;gap:10px
+}
+.leg-it{display:flex;align-items:center;gap:4px}
+.leg-d{width:8px;height:8px;border-radius:50%}
+
+/* my location */
+.myloc-dot{width:14px;height:14px;background:var(--blue);border:3px solid #fff;border-radius:50%;box-shadow:0 0 8px rgba(0,122,255,0.5),0 2px 8px rgba(0,0,0,0.15)}
+.myloc-ring{width:28px;height:28px;border:2px solid rgba(0,122,255,0.3);border-radius:50%;animation:lp 2s infinite;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)}
+@keyframes lp{0%{width:14px;height:14px;opacity:1}100%{width:48px;height:48px;opacity:0}}
+
+.export-btn{display:block;width:100%;padding:12px;margin:8px 0;border-radius:12px;border:none;font-size:14px;font-weight:600;color:#fff;cursor:pointer}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="header">
+    <div><div class="title">Springfield · 10/12连锁 (缺Lululemon/Whole Foods)</div><div class="sub">28家店 · 114.5英里<span id="gps-stat">定位关闭</span></div></div>
+    <div style="display:flex;gap:8px">
+      <button class="hbtn" onclick="autoRoute()">🚚</button>
+      <button class="hbtn" id="btnGPS" onclick="toggleGPS()">📍</button>
+    </div>
+  </div>
+
+  <div id="apple-banner">
+    <span class="dot"></span> Springfield · 28家店 · 10大连锁
+  </div>
+
+  <div id="loc-bar"><span class="next-info" id="nextStore"></span><span class="dist-info" id="nextDist"></span></div>
+
+  <div id="map">
+    <div class="legend">
+      <div class="leg-it"><div class="leg-d" style="background:#FF9500"></div>Target</div>
+      <div class="leg-it"><div class="leg-d" style="background:#1C1C1E"></div>BestBuy</div>
+      <div class="leg-it"><div class="leg-d" style="background:#5AC8FA"></div>Lowe's/HD</div>
+      <div class="leg-it"><div class="leg-d" style="background:#34C759"></div>Dollar</div>
+      <div class="leg-it"><div class="leg-d" style="background:#FF2D55"></div>Macy's</div>
+    </div>Target</div>
+      <div class="leg-it"><div class="leg-d" style="background:#1C1C1E"></div>BestBuy</div>
+      <div class="leg-it"><div class="leg-d" style="background:#5AC8FA"></div>Lowe's</div>
+      <div class="leg-it"><div class="leg-d" style="background:#FF9500"></div>Family$</div>
+      <div class="leg-it"><div class="leg-d" style="background:#FF2D55"></div>Apple</div>
+    </div>
+  </div>
+
+  <div id="panel">
+    <div id="panel-handle" onclick="togglePanel()"><div class="bar"></div></div>
+    <div id="panel-header">
+      <span class="ph-title">商店</span>
+      <span class="ph-count" id="ph-count">28家</span>
+    </div>
+    <div id="segmented">
+      <button class="seg-btn active" onclick="switchSeg(0)">全部</button>
+      <button class="seg-btn" onclick="switchSeg(1)">待访</button>
+      <button class="seg-btn" onclick="switchSeg(2)">已完成</button>
+    </div>
+    <div id="chain-summary"></div>
+    <div id="store-list"></div>
+  </div>
+
+  <div class="modal-overlay" id="noteModal">
+    <div class="modal-sheet">
+      <h3 id="noteTitle">备注</h3>
+      <div class="md-sub" id="noteSub"></div>
+      <input id="noteContact" placeholder="联系人">
+      <input id="notePhone" placeholder="电话">
+      <textarea id="noteText" placeholder="备注信息..."></textarea>
+      <div class="mbtns">
+        <button class="mbtn danger" onclick="saveNote(true)">清除</button>
+        <button class="mbtn secondary" onclick="closeNote()">取消</button>
+        <button class="mbtn primary" onclick="saveNote(false)">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="exportModal">
+    <div class="modal-sheet">
+      <h3>导出</h3><div class="md-sub">复制路线信息</div>
+      <button class="export-btn" style="background:var(--blue)" onclick="copyRoute()">📋 复制路线</button>
+      <button class="export-btn" style="background:var(--green)" onclick="copyUnvisited()">🏃 未拜访清单</button>
+      <button class="export-btn" style="background:var(--orange)" onclick="exportCSV()">📊 CSV</button>
+      <button class="export-btn" style="background:#F2F2F7;color:var(--text)" onclick="closeExport()">取消</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script>
+var CAT_COLORS={"大型零售":"#FF9500","电子产品":"#1C1C1E","家居装修":"#5AC8FA","折扣店":"#34C759","百货":"#FF2D55","美妆":"#AF52DE","超市":"#007AFF"};
+var ROUTE=[{"id": 0, "name": "Best Buy", "addr": "3300 S Glenstone Ave, Springfield, MO 65804", "lat": 37.153899, "lng": -93.262365, "cat": "电子产品", "note": "", "dist": 3.0}, {"id": 1, "name": "Target", "addr": "1825 E Primrose St, Springfield, MO 65804", "lat": 37.149891, "lng": -93.262301, "cat": "大型零售", "note": "", "dist": 0.3}, {"id": 2, "name": "Target", "addr": "3530 W Sunshine St, Springfield, MO 65807", "lat": 37.182869, "lng": -93.35216, "cat": "大型零售", "note": "", "dist": 5.4}, {"id": 3, "name": "Lowe's Home Improvement", "addr": "3300 S Campbell Ave, Springfield, MO 65807", "lat": 37.154498, "lng": -93.295574, "cat": "家居装修", "note": "", "dist": 3.7}, {"id": 4, "name": "Lowe's Home Improvement", "addr": "1515 E Kearney St, Springfield, MO 65803", "lat": 37.240215, "lng": -93.267104, "cat": "家居装修", "note": "", "dist": 6.1}, {"id": 5, "name": "Home Depot", "addr": "3335 S Campbell Ave, Springfield, MO 65807", "lat": 37.154593, "lng": -93.295716, "cat": "家居装修", "note": "", "dist": 6.1}, {"id": 6, "name": "Home Depot", "addr": "1545 E Kearney St, Springfield, MO 65803", "lat": 37.240211, "lng": -93.266792, "cat": "家居装修", "note": "", "dist": 6.1}, {"id": 7, "name": "Macy's", "addr": "2825 S Glenstone Ave, Springfield, MO 65804", "lat": 37.165239, "lng": -93.262731, "cat": "百货", "note": "", "dist": 5.2}, {"id": 8, "name": "Sephora", "addr": "2825 S Glenstone Ave, Springfield, MO 65804", "lat": 37.165239, "lng": -93.262731, "cat": "美妆", "note": "", "dist": 0.0}, {"id": 9, "name": "Hy-Vee", "addr": "1720 W Battlefield Rd, Springfield, MO 65807", "lat": 37.160126, "lng": -93.314688, "cat": "超市", "note": "", "dist": 2.9}, {"id": 10, "name": "Dollar Tree", "addr": "3335 S Campbell Ave, Springfield, MO 65807", "lat": 37.154593, "lng": -93.295716, "cat": "折扣店", "note": "", "dist": 1.1}, {"id": 11, "name": "Dollar Tree", "addr": "1520 E Kearney St, Springfield, MO 65803", "lat": 37.240096, "lng": -93.266766, "cat": "折扣店", "note": "", "dist": 6.1}, {"id": 12, "name": "Dollar Tree", "addr": "2445 N Kansas Expy, Springfield, MO 65803", "lat": 37.242785, "lng": -93.311107, "cat": "折扣店", "note": "", "dist": 2.4}, {"id": 13, "name": "Dollar Tree", "addr": "3720 W Sunshine St, Springfield, MO 65807", "lat": 37.180048, "lng": -93.218561, "cat": "折扣店", "note": "", "dist": 6.7}, {"id": 14, "name": "Family Dollar", "addr": "3240 S Campbell Ave, Springfield, MO 65807", "lat": 37.155589, "lng": -93.295538, "cat": "折扣店", "note": "", "dist": 4.5}, {"id": 15, "name": "Family Dollar", "addr": "1440 E Kearney St, Springfield, MO 65803", "lat": 37.240143, "lng": -93.268859, "cat": "折扣店", "note": "", "dist": 6.0}, {"id": 16, "name": "Family Dollar", "addr": "2710 W Chestnut Expy, Springfield, MO 65802", "lat": 37.211986, "lng": -93.332222, "cat": "折扣店", "note": "", "dist": 4.0}, {"id": 17, "name": "Family Dollar", "addr": "1825 S Stewart Ave, Springfield, MO 65804", "lat": 37.181088, "lng": -93.260288, "cat": "折扣店", "note": "", "dist": 4.5}, {"id": 18, "name": "Dollar General", "addr": "3435 S Campbell Ave, Springfield, MO 65807", "lat": 37.151567, "lng": -93.295835, "cat": "折扣店", "note": "", "dist": 2.8}, {"id": 19, "name": "Dollar General", "addr": "1540 E Kearney St, Springfield, MO 65803", "lat": 37.240091, "lng": -93.266281, "cat": "折扣店", "note": "", "dist": 6.3}, {"id": 20, "name": "Dollar General", "addr": "2525 N Glenstone Ave, Springfield, MO 65803", "lat": 37.242647, "lng": -93.260978, "cat": "折扣店", "note": "", "dist": 0.3}, {"id": 21, "name": "Dollar General", "addr": "3725 W Sunshine St, Springfield, MO 65807", "lat": 37.18302, "lng": -93.355033, "cat": "折扣店", "note": "", "dist": 6.6}, {"id": 22, "name": "Dollar General", "addr": "2860 W Chestnut Expy, Springfield, MO 65802", "lat": 37.212018, "lng": -93.334455, "cat": "折扣店", "note": "", "dist": 2.3}, {"id": 23, "name": "Dollar General", "addr": "1720 S Campbell Ave, Springfield, MO 65807", "lat": 37.184028, "lng": -93.294854, "cat": "折扣店", "note": "", "dist": 2.9}, {"id": 24, "name": "Dollar General", "addr": "4450 S Scenic Ave, Springfield, MO 65810", "lat": 37.133191, "lng": -93.332856, "cat": "折扣店", "note": "", "dist": 4.1}, {"id": 25, "name": "Dollar General", "addr": "1309 E Republic Rd, Springfield, MO 65804", "lat": 37.137678, "lng": -93.275028, "cat": "折扣店", "note": "", "dist": 3.2}, {"id": 26, "name": "Dollar General", "addr": "2640 N Kansas Expy, Springfield, MO 65803", "lat": 37.24532, "lng": -93.310868, "cat": "折扣店", "note": "", "dist": 7.7}, {"id": 27, "name": "Dollar General", "addr": "501 S Miller Rd, Springfield, MO 65802", "lat": 37.206198, "lng": -93.374151, "cat": "折扣店", "note": "", "dist": 4.4}];
+var ENTRY={"name": "Springfield中心", "lat": 37.189602, "lng": -93.292556};
+
+var LS=localStorage.getItem('springfield_v1');
+var totalDist=53.8;
+var S=LS?JSON.parse(LS):{v:{},n:{},o:null};
+if(!S.v)S.v={};if(!S.n)S.n={};if(!S.o)S.o=ROUTE.map(function(r){return r.id;});
+var V=S.v,N=S.n,O=S.o,seg=0,nid=null,mp=null,gw=null,go=false;
+
+function save(){S.v=V;S.n=N;S.o=O;localStorage.setItem('springfield_v1',JSON.stringify(S));}
+function gs(id){for(var i=0;i<ROUTE.length;i++)if(ROUTE[i].id===id)return ROUTE[i];return null;}
+function gn(lat,lng){return'https://www.google.com/maps/dir/?api=1&destination='+lat+','+lng+'&travelmode=driving&dir_action=navigate';}
+function cd(a,b){var x=(a.lat-b.lat)*69,y=(a.lng-b.lng)*54.6;return Math.sqrt(x*x+y*y);}
+
+// GPS
+function toggleGPS(){go?stopGPS():startGPS();}
+function startGPS(){if(!navigator.geolocation){toast('不支持定位');return;}go=true;document.getElementById('btnGPS').classList.add('gps');document.getElementById('gps-stat').textContent='已定位';document.getElementById('loc-bar').style.display='flex';navigator.geolocation.getCurrentPosition(function(p){up(p);gw=navigator.geolocation.watchPosition(up,function(){},{enableHighAccuracy:true,timeout:15000,maximumAge:5000});},function(){go=false;document.getElementById('btnGPS').classList.remove('gps');document.getElementById('loc-bar').style.display='none';},{enableHighAccuracy:true,timeout:10000});}
+function stopGPS(){go=false;if(gw)navigator.geolocation.clearWatch(gw);document.getElementById('btnGPS').classList.remove('gps');document.getElementById('gps-stat').textContent='定位关闭';document.getElementById('loc-bar').style.display='none';mp=null;render();}
+function up(p){mp={lat:p.coords.latitude,lng:p.coords.longitude};ulb();renderMap();}
+function ulb(){if(!mp||!go){document.getElementById('loc-bar').style.display='none';return;}document.getElementById('loc-bar').style.display='flex';var ids=O.filter(function(id){return!V[id];});if(ids.length){var s=gs(ids[0]);document.getElementById('nextStore').textContent=s.name;document.getElementById('nextDist').textContent=cd(mp,s).toFixed(1)+' 英里';}else{document.getElementById('nextStore').textContent='全部完成';document.getElementById('nextDist').textContent='';}}
+
+// MAP
+var map,markers={},polyline,startMarker,myMarker;
+function initMap(){
+  map=L.map('map',{
+    zoomControl:false,
+    preferCanvas:true,
+    fadeAnimation:false,
+    zoomAnimation:false,
+    attributionControl:false
+  }).setView([37.189602,-93.292556],12);
+  L.control.zoom({position:'bottomright'}).addTo(map);
+  // Use OpenStreetMap tiles - globally distributed CDN, faster in most regions
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    maxZoom:17,
+    updateWhenIdle:false,
+    updateWhenZooming:false,
+    keepBuffer:4
+  }).addTo(map);
+}
+function renderMap(){
+  if(!map){document.getElementById('map').classList.add('loading');initMap();document.getElementById('map').classList.remove('loading');}
+  Object.values(markers).forEach(function(m){map.removeLayer(m);});markers={};if(polyline)map.removeLayer(polyline);if(startMarker)map.removeLayer(startMarker);if(myMarker)map.removeLayer(myMarker);
+  var start=mp||ENTRY;
+  if(mp&&go){var MyIcon=L.divIcon({className:'myloc-marker',html:'<div class="myloc-ring"></div><div class="myloc-dot"></div>',iconSize:[28,28],iconAnchor:[14,14]});myMarker=L.marker([mp.lat,mp.lng],{icon:MyIcon,zIndexOffset:1000}).addTo(map);}
+  if(!(mp&&go)){startMarker=L.circleMarker([start.lat,start.lng],{radius:8,fillColor:'#FF3B30',color:'#fff',weight:3,fillOpacity:1}).addTo(map).bindPopup('<b>起点</b><br>'+ENTRY.name);}
+  var coords=[[start.lat,start.lng]];
+  O.forEach(function(id,idx){
+    var s=gs(id);if(!s)return;
+    if(seg===2&&!V[id])return;
+    if(seg===1&&V[id])return;
+    coords.push([s.lat,s.lng]);var color=CAT_COLORS[s.cat]||'#999';var isA=s.name.indexOf('Apple')!==-1;
+    var m=L.circleMarker([s.lat,s.lng],{radius:V[id]?6:isA?11:9,fillColor:V[id]?'#C7C7CC':(isA?'#FF2D55':color),color:'#fff',weight:2.5,fillOpacity:V[id]?0.5:1});
+    var ld=cd(start,s);
+    var pop='<div class="apop"><b>'+(idx+1)+'. '+s.name+'</b><br><span style="font-size:14px;color:#3C3C43">'+s.addr+'</span><br><span style="display:inline-block;background:#F2F2F7;padding:4px 10px;border-radius:8px;font-size:13px;color:#3C3C43;margin-top:6px">'+s.cat+'</span> <span style="font-size:13px;color:#007AFF;font-weight:500">'+(mp&&go?ld.toFixed(1):s.dist)+' mi</span>'+(V[id]?' ✅':'');
+    if(s.note)pop+='<br><span style="font-size:13px;color:#FF2D55;font-weight:500">💡 '+s.note+'</span>';
+    pop+='<div class="row"><a class="abtn nav" href="'+gn(s.lat,s.lng)+'" target="_blank">🧭 导航</a><a class="abtn note-btn" href="javascript:void(0)" onclick="openNote('+id+')">📝 备注</a></div></div>';
+    m.bindPopup(pop);m.on('click',function(s2){return function(){map.setView([s2.lat,s2.lng],15);};}(s));m.addTo(map);markers[id]=m;
+  });
+  polyline=L.polyline(coords,{color:'#007AFF',weight:3,opacity:0.6}).addTo(map);
+  if(coords.length>1)map.fitBounds(polyline.getBounds(),{padding:[40,40]});
+}
+
+// LIST
+function renderChainSummary(){
+  var allChains=['Best Buy','Lululemon','Target',"Lowe's",'Home Depot','Whole Foods','Dollar Tree','Dollar General','Family Dollar','Hy-Vee',"Macy's",'Sephora'];
+  var chainMap={'Best Buy':'Best Buy','Lululemon':'Lululemon','Target':'Target',"Lowe's Home Improvement":"Lowe's",'Home Depot':'Home Depot','Whole Foods Market':'Whole Foods','Dollar Tree':'Dollar Tree','Dollar General':'Dollar General','Family Dollar':'Family Dollar','Hy-Vee':'Hy-Vee',"Macy's":"Macy's",'Sephora':'Sephora'};
+  var colors={'Best Buy':'#1C1C1E','Lululemon':'#FF2D55','Target':'#FF9500',"Lowe's":'#5AC8FA','Home Depot':'#FF6B35','Whole Foods':'#007AFF','Dollar Tree':'#30B350','Dollar General':'#34C759','Family Dollar':'#28A745','Hy-Vee':'#FF3B30',"Macy's":'#AF52DE','Sephora':'#5856D6'};
+  var counts={};allChains.forEach(function(c){counts[c]=0;});
+  var total=0;
+  O.forEach(function(id){
+    var s=gs(id);if(!s)return;
+    if(seg===2&&!V[id])return;
+    if(seg===1&&V[id])return;
+    var cn=chainMap[s.name]||s.name;
+    if(counts[cn]!==undefined)counts[cn]++;
+    total++;
+  });
+  var el=document.getElementById('chain-summary'),html='';
+  if(seg===2){el.innerHTML='';return;}
+  allChains.forEach(function(k){
+    var c=counts[k]||0;
+    var dim=c===0?';opacity:0.4':'';
+    html+='<span class="chain-tag" style="border-left:3px solid '+colors[k]+dim+'">'+k+' <span class="ct-count" style="color:'+colors[k]+dim+'">'+c+'</span></span>';
+  });
+  el.innerHTML=html;
+}
+function renderList(){
+  var list=document.getElementById('store-list');list.innerHTML='';var count=0;
+  O.forEach(function(id,idx){
+    var s=gs(id);if(!s)return;
+    if(seg===2&&!V[id])return;
+    if(seg===1&&V[id])return;
+    count++;
+    var color=CAT_COLORS[s.cat]||'#999';var isA=s.name.indexOf('Apple')!==-1;
+    var card=document.createElement('div');card.className='store-card'+(V[id]?' done':'');
+    card.innerHTML='<span class="tag-dot" style="background:'+(isA?'#FF2D55':color)+'"></span>'+
+      '<span class="num">'+(idx+1)+'</span>'+
+      '<span class="info"><div class="s-name">'+s.name+'</div><div class="s-addr">'+s.addr+'</div></span>'+
+      '<span class="s-dist">'+(mp&&go?cd(mp,s).toFixed(1):s.dist)+' mi</span>'+
+      '<span class="s-nav" onclick="event.stopPropagation();window.open(\''+gn(s.lat,s.lng)+'\',\'_blank\')">🧭</span>'+
+      '<span class="s-done'+(V[id]?' yes':'')+'" onclick="event.stopPropagation();tv('+id+')">✓</span>';
+    card.onclick=function(s2,mid){return function(){map.setView([s2.lat,s2.lng],15);if(markers[mid])markers[mid].openPopup();};}(s,id);
+    list.appendChild(card);
+  });
+  document.getElementById('ph-count').textContent=count+'家';
+}
+
+// ACTIONS
+function tv(id){V[id]=!V[id];render();save();ulb();}
+function autoRoute(){
+  var start=mp||ENTRY;var ids=O.filter(function(id){return!V[id];});if(!ids.length){toast('全部完成');return;}
+  var cur=start,no=[];var rem=ids.slice();
+  while(rem.length){var near=rem[0],md=Infinity;rem.forEach(function(id){var d=cd(cur,gs(id));if(d<md){md=d;near=id;}});no.push(near);cur=gs(near);rem=rem.filter(function(id){return id!==near;});}
+  var nw=no.slice();O.forEach(function(id){if(nw.indexOf(id)===-1)nw.push(id);});O=nw;rd();render();save();ulb();toast('路线已优化');
+}
+function rd(){var prev=mp||ENTRY;O.forEach(function(id){var s=gs(id);if(!s)return;s.dist=Math.round(cd(prev,s)*10)/10;prev=s;});}
+
+// NOTES
+function openNote(id){nid=id;var s=gs(id);document.getElementById('noteTitle').textContent='备注';document.getElementById('noteSub').textContent=s.name+' · '+s.addr;var n=N[id]||{};document.getElementById('noteContact').value=n.contact||'';document.getElementById('notePhone').value=n.phone||'';document.getElementById('noteText').value=n.text||'';document.getElementById('noteModal').classList.add('show');}
+function closeNote(){document.getElementById('noteModal').classList.remove('show');nid=null;}
+function saveNote(del){if(del){N[nid]=null;delete N[nid];}else{var c=document.getElementById('noteContact').value.trim(),p=document.getElementById('notePhone').value.trim(),t=document.getElementById('noteText').value.trim();if(c||p||t)N[nid]={contact:c,phone:p,text:t};else{N[nid]=null;delete N[nid];}}closeNote();render();save();}
+
+// EXPORT
+function showExport(){document.getElementById('exportModal').classList.add('show');}
+function closeExport(){document.getElementById('exportModal').classList.remove('show');}
+function cr(){var t='Jackson 路线\n\n';O.forEach(function(id,idx){var s=gs(id);if(!s)return;t+=(idx+1)+'. '+s.name+' - '+s.addr+(V[id]?' ✓':'')+'\n';});navigator.clipboard.writeText(t).then(function(){toast('已复制');closeExport();}).catch(function(){prompt('复制:',t);});}
+function cu(){var t='未拜访:\n';O.forEach(function(id){var s=gs(id);if(s&&!V[id])t+=s.name+' - '+s.addr+'\n';});navigator.clipboard.writeText(t).then(function(){toast('已复制');closeExport();}).catch(function(){prompt('复制:',t);});}
+function ce(){var csv='序号,商店,地址,类别,状态\n';O.forEach(function(id,idx){var s=gs(id);if(!s)return;csv+=(idx+1)+',"'+s.name+'","'+s.addr+'",'+s.cat+','+(V[id]?'已拜访':'未完成')+'\n';});navigator.clipboard.writeText(csv).then(function(){toast('CSV已复制');closeExport();}).catch(function(){prompt('复制:',csv);});}
+
+function switchSeg(s){seg=s;document.querySelectorAll('.seg-btn').forEach(function(b,i){b.classList.toggle('active',i===s);});render();}
+var panelDragY=null,panelStartY=0,panelCollapsed=true;
+function togglePanel(){panelCollapsed=!panelCollapsed;document.getElementById('panel').classList.toggle('collapsed',panelCollapsed);}
+var panel=null;
+function initPanel(){
+  panel=document.getElementById('panel');
+  var mapDiv=document.getElementById('map');
+  
+  // Helper: drag panel to a bottom offset (px from screen bottom)
+  function dragPanelTo(bottomPx){
+    var maxUp=window.innerHeight*0.55;
+    if(bottomPx<0)bottomPx=0;
+    if(bottomPx>maxUp)bottomPx=maxUp;
+    panel.style.transform='translateY('+(-bottomPx)+'px)';
+  }
+  
+  // Helper: snap panel open or closed based on velocity/distance
+  function snapPanel(totalDy,velocity){
+    var threshold=velocity>0.3?10:25; // lower threshold when fast swipe
+    if(totalDy<-threshold){
+      panelCollapsed=false;
+      panel.style.transform='translateY(0)';
+      panel.classList.remove('collapsed');
+    }else if(totalDy>threshold){
+      panelCollapsed=true;
+      panel.style.transform='';
+      panel.classList.add('collapsed');
+    }else{
+      // spring back
+      panel.style.transform=panelCollapsed?'':'translateY(0)';
+    }
+  }
+  
+  var startTime=0;
+  
+  // === Touch on panel itself (the visible bottom strip) ===
+  panel.addEventListener('touchstart',function(e){
+    panelDragY=e.touches[0].clientY;
+    panelStartY=panelDragY;
+    startTime=Date.now();
+    panel.style.transition='none';
+  },{passive:false});
+  
+  panel.addEventListener('touchmove',function(e){
+    if(panelDragY===null)return;
+    var dy=e.touches[0].clientY-panelDragY;
+    var rect=panel.getBoundingClientRect();
+    var curBottom=window.innerHeight-rect.bottom;
+    dragPanelTo(curBottom-dy);
+    panelDragY=e.touches[0].clientY;
+    e.preventDefault();
+  },{passive:false});
+  
+  panel.addEventListener('touchend',function(e){
+    if(panelDragY===null)return;
+    var totalDy=e.changedTouches[0].clientY-panelStartY;
+    var dt=(Date.now()-startTime)/1000||0.01;
+    var velocity=Math.abs(totalDy)/dt;
+    panel.style.transition='transform 0.35s cubic-bezier(0.22,1,0.36,1)';
+    snapPanel(totalDy,velocity);
+    panelDragY=null;
+  });
+  
+  // === Touch on store list (when panel is open) ===
+  var storeList=document.getElementById('store-list');
+  if(storeList){
+    storeList.addEventListener('touchstart',function(e){
+      // Only intercept when at the very top and user swipes down
+      if(storeList.scrollTop<=0){
+        panelDragY=e.touches[0].clientY;
+        panelStartY=panelDragY;
+        startTime=Date.now();
+        panel.style.transition='none';
+      }
+    },{passive:false});
+    
+    storeList.addEventListener('touchmove',function(e){
+      if(panelDragY===null)return;
+      var dy=e.touches[0].clientY-panelDragY;
+      // If scrolling up (dy<0) or already scrolled, release to native scroll
+      if(dy<0 || storeList.scrollTop>0){
+        panelDragY=null;
+        return;
+      }
+      // User is swiping down at top of list -> drag panel down
+      if(dy>5){
+        var rect=panel.getBoundingClientRect();
+        var curBottom=window.innerHeight-rect.bottom;
+        dragPanelTo(curBottom-dy);
+        panelDragY=e.touches[0].clientY;
+        e.preventDefault();
+      }
+    },{passive:false});
+    
+    storeList.addEventListener('touchend',function(e){
+      if(panelDragY===null)return;
+      var totalDy=e.changedTouches[0].clientY-panelStartY;
+      var dt=(Date.now()-startTime)/1000||0.01;
+      var velocity=Math.abs(totalDy)/dt;
+      panel.style.transition='transform 0.35s cubic-bezier(0.22,1,0.36,1)';
+      snapPanel(totalDy,velocity);
+      panelDragY=null;
+    });
+  }
+  
+  // === Bottom zone: catch swipes from the bottom of the map ===
+  if(mapDiv){
+    mapDiv.addEventListener('touchstart',function(e){
+      var ty=e.touches[0].clientY;
+      var bottomZone=80; // px from bottom
+      // Only intercept touches near the bottom of the map
+      if(ty>window.innerHeight-bottomZone){
+        panelDragY=ty;
+        panelStartY=ty;
+        startTime=Date.now();
+        panel.style.transition='none';
+      }
+    },{passive:false});
+    
+    mapDiv.addEventListener('touchmove',function(e){
+      if(panelDragY===null)return;
+      var dy=e.touches[0].clientY-panelDragY;
+      // Only respond to upward swipes (open the panel)
+      if(dy<0){
+        var rect=panel.getBoundingClientRect();
+        var curBottom=window.innerHeight-rect.bottom;
+        dragPanelTo(curBottom-dy);
+        panelDragY=e.touches[0].clientY;
+        e.preventDefault();
+      }else{
+        // Downward swipe in map zone: release
+        panelDragY=null;
+      }
+    },{passive:false});
+    
+    mapDiv.addEventListener('touchend',function(e){
+      if(panelDragY===null)return;
+      var totalDy=e.changedTouches[0].clientY-panelStartY;
+      var dt=(Date.now()-startTime)/1000||0.01;
+      var velocity=Math.abs(totalDy)/dt;
+      panel.style.transition='transform 0.35s cubic-bezier(0.22,1,0.36,1)';
+      if(totalDy<-20){ // swiped up enough -> open
+        panelCollapsed=false;
+        panel.style.transform='translateY(0)';
+        panel.classList.remove('collapsed');
+      }else{
+        // spring back to collapsed
+        panel.style.transform=panelCollapsed?'':'translateY(0)';
+      }
+      panelDragY=null;
+    });
+  }
+}
+function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},1500);}
+function render(){renderMap();renderChainSummary();renderList();}
+
+document.getElementById('panel').classList.add('collapsed');
+initPanel();
+render();
+</script>
+</body>
+</html>

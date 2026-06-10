@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<title>盛海鱿鱼销售单</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#F2F2F7">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#F2F2F7;--card:#FFFFFF;--text:#1C1C1E;--sec:#6E6E73;--blue:#007AFF;--red:#FF3B30}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei','Helvetica Neue',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);-webkit-text-size-adjust:100%}
+#app{max-width:600px;margin:0 auto;display:flex;flex-direction:column;min-height:100%}
+
+#tabs{display:flex;padding:8px;gap:4px;background:rgba(242,242,247,0.88);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);position:sticky;top:0;z-index:100}
+.tab{flex:1;padding:10px;text-align:center;font-size:14px;font-weight:500;border-radius:10px;border:none;background:transparent;color:var(--sec);cursor:pointer;transition:all 0.2s}
+.tab.active{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,0.08)}
+
+#form{padding:16px;display:flex;flex-direction:column;gap:10px}
+.fgroup{display:flex;flex-direction:column;gap:3px}
+.fgroup label{font-size:11px;font-weight:600;color:var(--sec);letter-spacing:0.5px}
+.fgroup input,.fgroup textarea{
+  width:100%;padding:10px;border:none;border-radius:10px;background:var(--card);
+  font-size:15px;font-family:inherit;color:var(--text);outline:none;
+  box-shadow:0 1px 2px rgba(0,0,0,0.04);-webkit-appearance:none
+}
+.fgroup input:focus{box-shadow:0 0 0 2px var(--blue)}
+.row2{display:flex;gap:8px}
+.row2 .fgroup{flex:1}
+
+#items-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -16px;padding:0 16px}
+#items-table{min-width:700px;border-collapse:collapse}
+#items-table th{font-size:11px;font-weight:600;color:var(--sec);padding:6px 3px;text-align:center;white-space:nowrap}
+#items-table input,#items-table select{
+  width:100%;min-width:36px;padding:8px 2px;border:none;border-radius:8px;background:var(--card);
+  font-size:13px;font-family:inherit;text-align:center;outline:none;
+  box-shadow:0 1px 2px rgba(0,0,0,0.04);-webkit-appearance:none
+}
+#items-table .col-id{width:48px}
+#items-table .col-name{width:100px}#items-table .col-name input{text-align:left}
+#items-table .col-spec{width:68px}
+#items-table .col-unit{width:52px}
+#items-table .col-qty{width:56px}
+#items-table .col-price{width:68px}
+#items-table .col-amt{width:80px}
+#items-table .col-note{width:80px}#items-table .col-note input{text-align:left}
+#items-table .line-amt{font-weight:600;font-size:13px;text-align:center;padding:8px 2px}
+.del-cell{width:28px}
+.del-cell button{width:24px;height:24px;border-radius:12px;border:none;background:var(--red);color:#fff;font-size:14px;cursor:pointer}
+
+.add-btn{display:block;width:100%;padding:10px;border-radius:10px;border:2px dashed #D1D1D6;background:transparent;font-size:14px;color:var(--blue);cursor:pointer;font-weight:500;margin-top:4px}
+.add-btn:active{background:#F2F2F7}
+
+.quick-row{display:flex;flex-wrap:wrap;gap:4px}
+.quick-tag{padding:5px 10px;border-radius:12px;font-size:11px;border:1px solid #E5E5EA;background:var(--card);cursor:pointer;white-space:nowrap}
+.quick-tag:active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.quick-tag.custom{background:#E8F5E9;border-color:#A5D6A7}
+.quick-tag.add-custom{background:transparent;border-style:dashed;color:var(--blue);font-weight:600}
+.quick-tag.add-custom:active{background:var(--blue);color:#fff}
+
+#totals{padding:12px;background:var(--card);border-radius:12px}
+.tot-row{display:flex;justify-content:space-between;padding:4px 0;font-size:14px}
+.tot-row.grand{font-size:20px;font-weight:700;padding-top:8px;border-top:1px solid #E5E5EA;color:var(--red)}
+
+.actions{padding:16px;display:flex;gap:8px}
+.btn{flex:1;padding:14px;border-radius:14px;border:none;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.15s}
+.btn:active{transform:scale(0.97)}
+.btn.primary{background:var(--blue);color:#fff}
+.btn.secondary{background:var(--card);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,0.04)}
+.btn.danger{background:transparent;color:var(--red)}
+
+/* Preview — check-style landscape rectangle */
+#preview-wrap{display:none;background:#e8e8e8;padding:20px 8px}
+#preview-card{
+  max-width:900px;margin:0 auto;background:#fff;
+  /* Check proportions: roughly 2.5:1 landscape */
+  aspect-ratio:auto;min-height:360px;
+  padding:20px 24px 16px;position:relative;
+  font-family:'PingFang SC','Microsoft YaHei',sans-serif;font-size:12px;
+  line-height:1.6;color:#000;
+  border:1px solid #ccc;
+  box-shadow:0 2px 16px rgba(0,0,0,0.12);
+  display:flex;flex-direction:column;
+  overflow:hidden
+}
+#preview-card .p-title{text-align:center;font-size:18px;font-weight:700;letter-spacing:4px;margin-bottom:1px;flex-shrink:0}
+#preview-card .p-eng{text-align:center;font-size:8px;color:#999;letter-spacing:1px;margin-bottom:8px;flex-shrink:0}
+
+#preview-card .p-table{width:100%;border-collapse:collapse;margin:6px 0;flex:1}
+#preview-card .p-table th,#preview-card .p-table td{border:0.5px solid #555;padding:4px 3px;text-align:center;font-size:10px}
+
+#preview-card .p-table .tl{text-align:left}
+#preview-card .p-table .tr{text-align:right}
+
+#preview-card .p-sign{display:flex;justify-content:space-between;margin-top:6px;padding-top:4px;font-size:12px;flex-shrink:0}
+#preview-card .p-sign div{min-width:60px}
+
+.preview-actions{padding:16px;display:flex;gap:8px;max-width:800px;margin:0 auto}
+
+@media print{
+  @page{size:landscape;margin:8mm}
+  body,#preview-wrap{background:#fff}
+  #tabs,#form,.preview-actions{display:none!important}
+  #preview-wrap{display:block!important;padding:0}
+  #preview-card{box-shadow:none;border:1px solid #000;padding:12px 16px;max-width:100%;aspect-ratio:auto;min-height:auto}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<div id="tabs">
+  <button class="tab active" onclick="switchTab('form')">✏️ 填写</button>
+  <button class="tab" onclick="switchTab('preview')">👁 预览</button>
+</div>
+
+<div id="form">
+
+  <div class="row2">
+    <div class="fgroup"><label>日期</label><input type="date" id="invDate"></div>
+    <div class="fgroup"><label>单号</label><input type="text" id="invNo" placeholder="自动"></div>
+  </div>
+  <div class="row2">
+    <div class="fgroup"><label>客户名称</label><input type="text" id="custName" placeholder="客户名称"></div>
+    <div class="fgroup"><label>备注</label><input type="text" id="custNote" placeholder="客户备注"></div>
+  </div>
+
+  <div class="fgroup"><label>快速添加（常用排前面）</label>
+    <div class="quick-row" id="quickTags"></div>
+    <div style="display:flex;gap:6px;margin-top:6px">
+      <input type="text" id="customProdInput" placeholder="输入新商品名，回车添加" style="flex:1;padding:8px 12px;border:none;border-radius:10px;background:var(--card);font-size:13px;font-family:inherit;outline:none;box-shadow:0 1px 2px rgba(0,0,0,0.04)" onkeydown="if(event.key==='Enter'){addCustomProduct()}">
+      <button onclick="addCustomProduct()" style="padding:8px 16px;border-radius:10px;border:none;background:var(--blue);color:#fff;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap">添加</button>
+    </div>
+  </div>
+
+  <div class="fgroup"><label>商品明细（可左右滑动）</label></div>
+  <div id="items-wrap">
+    <table id="items-table">
+      <thead><tr>
+        <th class="col-id">商品编号</th>
+        <th class="col-name">商品名</th>
+        <th class="col-spec">规格型号</th>
+        <th class="col-unit">单位</th>
+        <th class="col-qty">数量</th>
+        <th class="col-price">单价</th>
+        <th class="col-amt">金额</th>
+        <th class="col-note">备注</th>
+        <th class="del-cell"></th>
+      </tr></thead>
+      <tbody id="items-tbody"></tbody>
+    </table>
+  </div>
+  <button class="add-btn" onclick="addItem()">+ 添加行</button>
+
+  <div id="totals">
+    <div class="tot-row"><span>总金额（小写）</span><span>¥ <b id="grandNum">0.00</b></span></div>
+    <div class="tot-row"><span>总金额（大写）</span><span id="grandCN">零元整</span></div>
+  </div>
+
+  <div class="row2">
+    <div class="fgroup"><label>销售</label><input type="text" id="salesPerson" placeholder="销售员"></div>
+    <div class="fgroup"><label>出货</label><input type="text" id="shipper" placeholder="出货人"></div>
+    <div class="fgroup"><label>经手人</label><input type="text" id="handler" placeholder="经手人"></div>
+  </div>
+
+  <div class="actions">
+    <button class="btn danger" onclick="resetForm()">清空</button>
+    <button class="btn primary" onclick="generate()">生成销售单</button>
+  </div>
+</div>
+
+<div id="preview-wrap">
+  <div id="preview-card"></div>
+  <div class="preview-actions">
+    <button class="btn secondary" onclick="switchTab('form')">← 返回修改</button>
+    <button class="btn primary" onclick="window.print()">🖨 打印 / 截图</button>
+  </div>
+</div>
+
+</div>
+
+<script>
+function numToChinese(n){
+  if(n===0)return'零元整';
+  var d='零壹贰叁肆伍陆柒捌玖';
+  var u=['','拾','佰','仟'];
+  var b=['','万','亿'];
+  var s=Math.abs(n).toFixed(2).split('.');
+  var ip=parseInt(s[0]),dp=s[1];
+  function ci(num){
+    if(num===0)return'零';
+    var r='',ui=0,z=false;
+    while(num>0){
+      var seg=num%10000;
+      if(seg>0){
+        var ss='',sn=seg;
+        for(var i=0;i<4;i++){var di=sn%10;if(di>0){ss=d[di]+u[i]+(z&&i>0?'零':'')+ss;z=false}else{if(ss&&ss[0]!=='零')z=true}sn=Math.floor(sn/10)}
+        r=ss+b[ui]+r
+      }
+      num=Math.floor(num/10000);ui++
+    }
+    return r.replace(/零+/g,'零').replace(/零$/,'')
+  }
+  var r=ci(ip)+'元';
+  if(dp==='00')r+='整';
+  else{var j=parseInt(dp[0]),f=parseInt(dp[1]);if(j>0)r+=d[j]+'角';if(f>0)r+=d[f]+'分'}
+  return r
+}
+
+function pad5(n){return String(n)}
+
+// Product memory system
+var defaultItems=['三文鱼','金枪鱼','北极贝','甜虾','帝王蟹','波龙','生蚝','扇贝','鲍鱼','象拔蚌','东星斑','多宝鱼','石斑鱼','带鱼','鱿鱼','海参','花蛤','蛏子','大黄鱼','斑节虾'];
+
+// Load saved data: {items: {name: count}, custom: [names]}
+var prodData=null;
+try{prodData=JSON.parse(localStorage.getItem('seafood_prods')||'null')}catch(e){}
+if(!prodData)prodData={items:{},custom:[]};
+
+// Initialize counts for default items
+defaultItems.forEach(function(n){if(!(n in prodData.items))prodData.items[n]=0});
+
+function saveProds(){try{localStorage.setItem('seafood_prods',JSON.stringify(prodData))}catch(e){}}
+
+function recordUse(name){
+  if(!(name in prodData.items))prodData.items[name]=0;
+  prodData.items[name]++;
+  if(prodData.custom.indexOf(name)===-1&&defaultItems.indexOf(name)===-1){
+    prodData.custom.push(name);
+  }
+  saveProds();
+  renderQuickTags();
+}
+
+function addCustomProduct(){
+  var input=document.getElementById('customProdInput');
+  var name=input.value.trim();
+  if(!name)return;
+  if(name.length>12){alert('名称不超过12个字');return}
+  // Add and use immediately
+  if(!(name in prodData.items))prodData.items[name]=0;
+  if(prodData.custom.indexOf(name)===-1&&defaultItems.indexOf(name)===-1){
+    prodData.custom.push(name);
+  }
+  recordUse(name);
+  quickAdd(name);
+  input.value='';
+  input.focus();
+}
+
+function renderQuickTags(){
+  var qtEl=document.getElementById('quickTags');
+  // Build sorted list: by usage count desc, then alphabetically
+  var all=[];
+  for(var k in prodData.items){
+    all.push({name:k,count:prodData.items[k]});
+  }
+  all.sort(function(a,b){
+    if(b.count!==a.count)return b.count-a.count;
+    return a.name.localeCompare(b.name,'zh');
+  });
+  
+  var html='';
+  // Show top 24
+  for(var i=0;i<Math.min(all.length,24);i++){
+    var n=all[i].name;
+    var isCustom=(defaultItems.indexOf(n)===-1);
+    html+='<span class="quick-tag'+(isCustom?' custom':'')+'" onclick="recordUse(\''+n.replace(/'/g,"\\'")+'\');quickAdd(\''+n.replace(/'/g,"\\'")+'\')" title="使用'+all[i].count+'次">'+n+'</span>';
+  }
+  // Add custom input
+  html+='<span class="quick-tag add-custom" onclick="document.getElementById(\'customProdInput\').focus()">+ 自定义</span>';
+  qtEl.innerHTML=html;
+}
+
+var qtEl=document.getElementById('quickTags');
+renderQuickTags();
+
+document.getElementById('invDate').value=new Date().toISOString().split('T')[0];
+document.getElementById('invNo').value='SH'+Date.now().toString(36).toUpperCase().slice(-5);
+
+var nextId=1;
+function quickAdd(name){
+  // Find first empty row (no product name) and fill it
+  var rows=document.querySelectorAll('#items-tbody tr');
+  var filled=false;
+  for(var i=0;i<rows.length;i++){
+    var nameInput=rows[i].querySelector('.col-name input');
+    if(nameInput&&!nameInput.value.trim()){
+      nameInput.value=name;
+      nameInput.focus();
+      filled=true;
+      break;
+    }
+  }
+  // If all rows have content, add new row
+  if(!filled){
+    addItemRow(pad5(nextId++),name);
+  }
+  calcTotals();
+  recordUse(name);
+}
+function addItem(){
+  // Check if there's already an empty row
+  var rows=document.querySelectorAll('#items-tbody tr');
+  for(var i=0;i<rows.length;i++){
+    var nameInput=rows[i].querySelector('.col-name input');
+    if(nameInput&&!nameInput.value.trim()){
+      nameInput.focus();
+      return; // Don't add new row, let user fill existing
+    }
+  }
+  addItemRow(pad5(nextId++),'');calcTotals();
+}
+
+function addItemRow(id,name){
+  var tb=document.getElementById('items-tbody'),tr=document.createElement('tr');
+  tr.innerHTML=
+    '<td class="col-id"><input type="text" value="'+id+'" size="5" maxlength="5"></td>'+
+    '<td class="col-name"><input type="text" value="'+(name||'')+'" placeholder="商品名"></td>'+
+    '<td class="col-spec"><input type="text" placeholder="规格"></td>'+
+    '<td class="col-unit"><select><option>斤</option><option>公斤</option><option>件</option><option>箱</option><option>袋</option><option>只</option><option>条</option><option>盒</option><option>包</option></select></td>'+
+    '<td class="col-qty"><input type="number" value="1" min="0.1" step="0.1"></td>'+
+    '<td class="col-price"><input type="number" value="0" step="0.01" min="0"></td>'+
+    '<td class="col-amt"><div class="line-amt">¥0</div></td>'+
+    '<td class="col-note"><input type="text" placeholder="备注"></td>'+
+    '<td class="del-cell"><button onclick="delItem(this)">−</button></td>';
+  tb.appendChild(tr);
+  tr.querySelectorAll('input[type="number"]').forEach(function(i){i.addEventListener('input',calcTotals)})
+}
+
+function delItem(btn){
+  var tb=document.getElementById('items-tbody');
+  if(tb.children.length<=1)return;
+  btn.closest('tr').remove();calcTotals()
+}
+
+function calcTotals(){
+  var t=0;
+  document.querySelectorAll('#items-tbody tr').forEach(function(r){
+    var q=parseFloat(r.querySelector('.col-qty input').value)||0;
+    var p=parseFloat(r.querySelector('.col-price input').value)||0;
+    var a=q*p;r.querySelector('.line-amt').textContent='¥'+a.toFixed(2);t+=a
+  });
+  document.getElementById('grandNum').textContent=t.toFixed(2);
+  document.getElementById('grandCN').textContent=numToChinese(t)
+}
+
+function resetForm(){
+  document.getElementById('custName').value='';
+  document.getElementById('custNote').value='';
+  document.getElementById('salesPerson').value='';
+  document.getElementById('shipper').value='';
+  document.getElementById('handler').value='';
+  document.getElementById('invNo').value='SH'+Date.now().toString(36).toUpperCase().slice(-5);
+  nextId=1;
+  document.getElementById('items-tbody').innerHTML='';
+  addItem();addItem();addItem();calcTotals()
+}
+
+function switchTab(tab){
+  document.querySelectorAll('.tab').forEach(function(t,i){t.classList.toggle('active',(tab==='form'&&i===0)||(tab==='preview'&&i===1))});
+  document.getElementById('form').style.display=tab==='form'?'block':'none';
+  document.getElementById('preview-wrap').style.display=tab==='preview'?'block':'none';
+  if(tab==='preview')generatePreview()
+}
+
+function generate(){
+  if(!document.getElementById('custName').value.trim()){alert('请填写客户名称');return}
+  generatePreview();switchTab('preview')
+}
+
+function generatePreview(){
+  var dt=document.getElementById('invDate').value||'____年__月__日';
+  var no=document.getElementById('invNo').value||'________';
+  var cn=document.getElementById('custName').value||'________';
+  var cnote=document.getElementById('custNote').value||'';
+  var sp=document.getElementById('salesPerson').value||'________';
+  var sh=document.getElementById('shipper').value||'________';
+  var hn=document.getElementById('handler').value||'________';
+  
+  if(dt.match(/^\d{4}-\d{2}-\d{2}$/)){var dp=dt.split('-');dt=dp[0]+'年'+parseInt(dp[1])+'月'+parseInt(dp[2])+'日'}
+  
+  var rows='',t=0;
+  document.querySelectorAll('#items-tbody tr').forEach(function(r){
+    var id=r.querySelector('.col-id input').value||'';
+    var nm=r.querySelector('.col-name input').value||'';
+    var spc=r.querySelector('.col-spec input').value||'';
+    var un=r.querySelector('.col-unit select').value||'';
+    var qt=r.querySelector('.col-qty input').value||'';
+    var pr=r.querySelector('.col-price input').value||'';
+    var q=parseFloat(qt)||0,p=parseFloat(pr)||0,a=q*p;t+=a;
+    rows+='<tr><td>'+id+'</td><td class="tl">'+nm+'</td><td>'+spc+'</td><td>'+un+'</td><td>'+qt+'</td><td class="tr">'+pr+'</td><td class="tr">'+a.toFixed(2)+'</td><td class="tl">'+(r.querySelector('.col-note input').value||'')+'</td></tr>'
+  });
+  
+  // Always show 5 rows for clean look
+  var dataRows=document.querySelectorAll('#items-tbody tr').length;
+  for(var i=dataRows;i<5;i++){
+    rows+='<tr><td>'+(i+1)+'</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>';
+  }
+  
+  var cnStr=numToChinese(t);
+  
+  var h='';
+  h+='<div class="p-title">盛海鱿鱼销售单</div>';
+  h+='<div class="p-eng">SHENGHAI SEAFOOD SALES ORDER</div>';
+  
+  // Unified grid table
+  h+='<table class="p-table">';
+  // Row 1: Date + Number
+  h+='<tr><td colspan="4" class="tl" style="border-right:none"><b>日期：</b>'+dt+'</td><td colspan="4" style="text-align:right;border-left:none"><b>单号：</b>'+no+'</td></tr>';
+  // Row 2: Customer name + Notes
+  h+='<tr><td colspan="4" class="tl"><b>客户名称：</b>'+cn+'</td><td colspan="4" class="tl"><b>备注：</b>'+(cnote||'')+'</td></tr>';
+  // Row 3: Column headers
+  h+='<tr><th>商品编号</th><th>商品名</th><th>规格型号</th><th>单位</th><th>数量</th><th>单价</th><th>金额</th><th>备注</th></tr>';
+  // Data rows
+  h+=rows;
+  // Totals row (spanning multiple columns)
+  h+='<tr><td colspan="4" class="tl" style="border-right:none"><b>总金额（大写）：</b>'+cnStr+'</td><td colspan="4" class="tr" style="border-left:none"><b>总金额（小写）：</b>¥ '+t.toFixed(2)+'</td></tr>';
+  h+='</table>';
+  
+  // Signature row below table
+  h+='<div class="p-sign"><div>销售：'+sp+'</div><div>出货：'+sh+'</div><div>经手人：'+hn+'</div></div>';
+  
+  document.getElementById('preview-card').innerHTML=h
+}
+
+addItemRow(pad5(nextId),'');nextId++;calcTotals();
+</script>
+</body>
+</html>
