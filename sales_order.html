@@ -58,6 +58,8 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC'
 .quick-tag.custom{background:#E8F5E9;border-color:#A5D6A7}
 .quick-tag.add-custom{background:transparent;border-style:dashed;color:var(--blue);font-weight:600}
 .quick-tag.add-custom:active{background:var(--blue);color:#fff}
+.quick-tag.hidden{background:#FFF3F3;border-color:#FFCDD2;color:#999;text-decoration:line-through;font-size:10px;cursor:pointer}
+.quick-tag.hidden:active{background:var(--green);color:#fff;text-decoration:none}
 
 #totals{padding:12px;background:var(--card);border-radius:12px}
 .tot-row{display:flex;justify-content:space-between;padding:4px 0;font-size:14px}
@@ -216,12 +218,25 @@ var defaultItems=['三文鱼','金枪鱼','北极贝','甜虾','帝王蟹','波�
 // Load saved data: {items: {name: count}, custom: [names]}
 var prodData=null;
 try{prodData=JSON.parse(localStorage.getItem('seafood_prods')||'null')}catch(e){}
-if(!prodData)prodData={items:{},custom:[]};
+if(!prodData)prodData={items:{},custom:[],hidden:[]};
+if(!prodData.hidden)prodData.hidden=[];
 
 // Initialize counts for default items
 defaultItems.forEach(function(n){if(!(n in prodData.items))prodData.items[n]=0});
 
 function saveProds(){try{localStorage.setItem('seafood_prods',JSON.stringify(prodData))}catch(e){}}
+function hideProduct(name){
+  if(!confirm('删除"' + name + '"？\n可从底部「已隐藏」恢复'))return;
+  if(prodData.hidden.indexOf(name)===-1)prodData.hidden.push(name);
+  saveProds();
+  renderQuickTags();
+}
+function unhideProduct(name){
+  var idx=prodData.hidden.indexOf(name);
+  if(idx!==-1)prodData.hidden.splice(idx,1);
+  saveProds();
+  renderQuickTags();
+}
 
 function recordUse(name){
   if(!(name in prodData.items))prodData.items[name]=0;
@@ -251,10 +266,11 @@ function addCustomProduct(){
 
 function renderQuickTags(){
   var qtEl=document.getElementById('quickTags');
-  // Build sorted list: by usage count desc, then alphabetically
   var all=[];
   for(var k in prodData.items){
-    all.push({name:k,count:prodData.items[k]});
+    if(prodData.hidden.indexOf(k)===-1){
+      all.push({name:k,count:prodData.items[k]});
+    }
   }
   all.sort(function(a,b){
     if(b.count!==a.count)return b.count-a.count;
@@ -262,15 +278,39 @@ function renderQuickTags(){
   });
   
   var html='';
-  // Show top 24
   for(var i=0;i<Math.min(all.length,24);i++){
     var n=all[i].name;
     var isCustom=(defaultItems.indexOf(n)===-1);
-    html+='<span class="quick-tag'+(isCustom?' custom':'')+'" onclick="recordUse(\''+n.replace(/'/g,"\\'")+'\');quickAdd(\''+n.replace(/'/g,"\\'")+'\')" title="使用'+all[i].count+'次">'+n+'</span>';
+    html+='<span class="quick-tag'+(isCustom?' custom':'')+'" onclick="recordUse(\''+n.replace(/'/g,"\\'")+'\');quickAdd(\''+n.replace(/'/g,"\\'")+'\')" title="使用'+all[i].count+'次 | 右键删除">'+n+'</span>';
   }
-  // Add custom input
   html+='<span class="quick-tag add-custom" onclick="document.getElementById(\'customProdInput\').focus()">+ 自定义</span>';
+  
+  // Hidden products restore section
+  if(prodData.hidden.length>0){
+    html+='<div style="width:100%;margin-top:6px;padding-top:6px;border-top:1px solid #E5E5EA;display:flex;flex-wrap:wrap;gap:4px;align-items:center">';
+    html+='<span style="font-size:10px;color:var(--sec);margin-right:4px">已隐藏:</span>';
+    for(var j=0;j<prodData.hidden.length;j++){
+      var hn=prodData.hidden[j];
+      html+='<span class="quick-tag hidden" onclick="unhideProduct(\''+hn.replace(/'/g,"\\'")+'\')" title="点击恢复">'+hn+' ↩</span>';
+    }
+    html+='</div>';
+  }
+  
   qtEl.innerHTML=html;
+  
+  // Add right-click/long-press delete to all visible tags
+  var tags=qtEl.querySelectorAll('.quick-tag:not(.add-custom):not(.hidden)');
+  tags.forEach(function(tag){
+    var name=tag.textContent.trim();
+    tag.addEventListener('contextmenu',function(e){e.preventDefault();hideProduct(name);});
+    // Long press for mobile
+    var pressTimer;
+    tag.addEventListener('touchstart',function(e){
+      pressTimer=setTimeout(function(){hideProduct(name);},800);
+    });
+    tag.addEventListener('touchend',function(){clearTimeout(pressTimer);});
+    tag.addEventListener('touchmove',function(){clearTimeout(pressTimer);});
+  });
 }
 
 var qtEl=document.getElementById('quickTags');
