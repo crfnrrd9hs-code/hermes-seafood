@@ -49,7 +49,7 @@ cities.forEach(function(c,i){
     radius:c.label.indexOf('出发')!==-1||c.label.indexOf('回家')!==-1?10:7,
     fillColor:color,color:'#fff',weight:2,fillOpacity:0.9
   }).addTo(map);
-  m.bindPopup('<b>'+c.name+'</b><br>'+c.label+'<br>'+(i>0?'← '+prevDist(cities[i-1],c).toFixed(0)+'英里':'起点'));
+  m.bindPopup('<b>'+c.name+'</b><br>'+c.label+'<br>'+(i>0?'← '+(prevDist(cities[i-1],c)*1.609).toFixed(0)+'公里':'起点'));
   
   legendHtml+='<div class="day"><span class="dot" style="background:'+color+'"></span> '+c.label+' — <b>'+c.name+'</b></div>';
 });
@@ -63,6 +63,30 @@ function prevDist(a,b){
 var coords=cities.map(function(c){return [c.lat,c.lng];});
 var poly=L.polyline(coords,{color:'#007AFF',weight:3,opacity:0.5,dashArray:'8,8'}).addTo(map);
 map.fitBounds(poly.getBounds(),{padding:[30,30]});
+
+// Add distance+time labels on each segment
+cities.forEach(function(c,i){
+  if(i===0)return;
+  var prev=cities[i-1];
+  var distKm=prevDist(prev,c)*1.609;
+  var hours=distKm/96; // ~60mph ≈ 96km/h average
+  var h=Math.floor(hours);
+  var m=Math.round((hours-h)*60);
+  if(m===60){h++;m=0;}
+  var timeStr=h+'h'+(m>0?m+'min':'');
+  var distStr=distKm.toFixed(0)+'km';
+  
+  var midLat=(prev.lat+c.lat)/2;
+  var midLng=(prev.lng+c.lng)/2;
+  
+  var label=L.divIcon({
+    className:'segment-label',
+    html:'<div style="background:rgba(255,255,255,0.9);padding:3px 8px;border-radius:10px;font-size:10px;font-weight:600;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,0.15);color:#007AFF;text-align:center">'+distStr+'<br><span style="font-size:9px;color:#666">🚗 '+timeStr+'</span></div>',
+    iconSize:[0,0],
+    iconAnchor:[35,0]
+  });
+  L.marker([midLat,midLng],{icon:label}).addTo(map);
+});
 
 document.getElementById('legend').innerHTML=legendHtml;
 </script>
