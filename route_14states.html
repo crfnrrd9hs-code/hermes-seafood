@@ -7,13 +7,12 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif}
+html,body{height:100%;width:100%;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif}
 #map{height:100%;width:100%}
 #info{
   position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:1000;
-  background:rgba(255,255,255,0.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-  padding:8px 16px;border-radius:12px;font-size:13px;font-weight:600;
-  box-shadow:0 2px 12px rgba(0,0,0,0.1);white-space:nowrap
+  background:rgba(255,255,255,0.92);padding:8px 16px;border-radius:12px;
+  font-size:13px;font-weight:600;box-shadow:0 2px 12px rgba(0,0,0,0.1);white-space:nowrap
 }
 #legend{
   position:absolute;bottom:30px;left:10px;z-index:1000;
@@ -22,102 +21,79 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC'
 }
 #legend .day{margin:4px 0;display:flex;align-items:center;gap:6px}
 #legend .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-.leaflet-popup-content{font-size:13px;line-height:1.6}
-.city-label{
-  background:rgba(255,255,255,0.85);border:none;box-shadow:0 1px 4px rgba(0,0,0,0.15);
-  padding:2px 8px;border-radius:8px;font-size:12px;color:#1C1C1E;
-  white-space:nowrap;pointer-events:none
-}
+.leaflet-popup-content{font-size:12px;line-height:1.5}
 </style>
 </head>
 <body>
 <div id="map"></div>
-<div id="info">🚗 路易维尔出发 → 14州大环线 · 15城 · 约5,300公里</div>
+<div id="info">🚗 路易维尔 → 辛辛那提出发 · 21城 · 6,294km</div>
 <div id="legend"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-var map=L.map('map',{zoomControl:true}).setView([41,-89],5);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:12,attribution:'&copy; OpenStreetMap'}).addTo(map);
-
-var segDist={"\u8def\u6613\u7ef4\u5c14,\u8f9b\u8f9b\u90a3\u63d0": [102, 117], "\u8f9b\u8f9b\u90a3\u63d0,\u54e5\u4f26\u5e03": [109, 133], "\u54e5\u4f26\u5e03,\u514b\u5229\u592b\u5170": [142, 162], "\u514b\u5229\u592b\u5170,\u5e95\u7279\u5f8b": [169, 194], "\u5e95\u7279\u5f8b,\u5927\u6025\u6d41\u57ce": [161, 177], "\u5927\u6025\u6d41\u57ce,\u829d\u52a0\u54e5": [176, 205], "\u829d\u52a0\u54e5,\u5bc6\u5c14\u6c83\u57fa": [89, 112], "\u5bc6\u5c14\u6c83\u57fa,\u9ea6\u8fea\u900a": [81, 103], "\u9ea6\u8fea\u900a,\u660e\u5c3c\u963f\u6ce2\u5229\u65af": [266, 312], "\u660e\u5c3c\u963f\u6ce2\u5229\u65af,\u5f97\u6885\u56e0": [244, 270], "\u5f97\u6885\u56e0,\u582a\u8428\u65af\u57ce": [193, 214], "\u582a\u8428\u65af\u57ce,\u4fc4\u514b\u62c9\u8377\u9a6c\u57ce": [352, 361], "\u4fc4\u514b\u62c9\u8377\u9a6c\u57ce,\u5854\u5c14\u8428": [107, 113], "\u5854\u5c14\u8428,\u5c0f\u77f3\u57ce": [273, 284], "\u5c0f\u77f3\u57ce,\u5b5f\u83f2\u65af": [137, 146], "\u5b5f\u83f2\u65af,\u7eb3\u4ec0\u7ef4\u5c14": [210, 235], "\u7eb3\u4ec0\u7ef4\u5c14,\u67e5\u5854\u52aa\u52a0": [131, 149], "\u67e5\u5854\u52aa\u52a0,\u8bfa\u514b\u65af\u7ef4\u5c14": [111, 129], "\u8bfa\u514b\u65af\u7ef4\u5c14,\u5723\u8def\u6613\u65af": [492, 544], "\u5723\u8def\u6613\u65af,\u5370\u7b2c\u5b89\u7eb3\u6ce2\u5229\u65af": [250, 284], "\u5370\u7b2c\u5b89\u7eb3\u6ce2\u5229\u65af,\u8def\u6613\u7ef4\u5c14": [117, 133]};
-var cityStores={'路易维尔':{total:81,stores:{"Best Buy": 3, "Lululemon": 1, "Target": 6, "Lowe's": 3, "Home Depot": 3, "Whole Foods": 1, "Dollar Tree": 13, "Dollar General": 32, "Family Dollar": 16, "Hy-Vee": 0, "Macy's": 1, "Sephora": 1, "Apple": 1}},'纳什维尔':{total:124,stores:{"Best Buy": 4, "Lululemon": 1, "Target": 10, "Lowe's": 4, "Home Depot": 5, "Whole Foods": 1, "Dollar Tree": 20, "Dollar General": 50, "Family Dollar": 24, "Hy-Vee": 0, "Macy's": 2, "Sephora": 2, "Apple": 1}},'孟菲斯':{total:81,stores:{"Best Buy": 3, "Lululemon": 1, "Target": 6, "Lowe's": 3, "Home Depot": 3, "Whole Foods": 1, "Dollar Tree": 13, "Dollar General": 32, "Family Dollar": 16, "Hy-Vee": 0, "Macy's": 1, "Sephora": 1, "Apple": 1}},'诺克斯维尔':{total:56,stores:{"Best Buy": 2, "Lululemon": 0, "Target": 4, "Lowe's": 2, "Home Depot": 2, "Whole Foods": 1, "Dollar Tree": 9, "Dollar General": 22, "Family Dollar": 11, "Hy-Vee": 0, "Macy's": 1, "Sephora": 1, "Apple": 1}},'查塔努加':{total:35,stores:{"Best Buy": 1, "Lululemon": 0, "Target": 3, "Lowe's": 1, "Home Depot": 1, "Whole Foods": 0, "Dollar Tree": 6, "Dollar General": 14, "Family Dollar": 7, "Hy-Vee": 0, "Macy's": 0, "Sephora": 1, "Apple": 1}},'辛辛那提':{total:136,stores:{"Best Buy": 4, "Lululemon": 1, "Target": 11, "Lowe's": 5, "Home Depot": 6, "Whole Foods": 1, "Dollar Tree": 22, "Dollar General": 55, "Family Dollar": 26, "Hy-Vee": 0, "Macy's": 2, "Sephora": 2, "Apple": 1}},'哥伦布':{total:129,stores:{"Best Buy": 4, "Lululemon": 1, "Target": 10, "Lowe's": 5, "Home Depot": 5, "Whole Foods": 1, "Dollar Tree": 21, "Dollar General": 52, "Family Dollar": 25, "Hy-Vee": 0, "Macy's": 2, "Sephora": 2, "Apple": 1}},'克利夫兰':{total:124,stores:{"Best Buy": 4, "Lululemon": 1, "Target": 10, "Lowe's": 4, "Home Depot": 5, "Whole Foods": 1, "Dollar Tree": 20, "Dollar General": 50, "Family Dollar": 24, "Hy-Vee": 0, "Macy's": 2, "Sephora": 2, "Apple": 1}},'底特律':{total:269,stores:{"Best Buy": 9, "Lululemon": 2, "Target": 21, "Lowe's": 10, "Home Depot": 11, "Whole Foods": 3, "Dollar Tree": 43, "Dollar General": 108, "Family Dollar": 52, "Hy-Vee": 0, "Macy's": 4, "Sephora": 4, "Apple": 2}},'大急流城':{total:69,stores:{"Best Buy": 2, "Lululemon": 0, "Target": 6, "Lowe's": 2, "Home Depot": 3, "Whole Foods": 1, "Dollar Tree": 11, "Dollar General": 28, "Family Dollar": 13, "Hy-Vee": 0, "Macy's": 1, "Sephora": 1, "Apple": 1}},'芝加哥':{total:592,stores:{"Best Buy": 19, "Lululemon": 4, "Target": 48, "Lowe's": 21, "Home Depot": 24, "Whole Foods": 6, "Dollar Tree": 95, "Dollar General": 238, "Family Dollar": 114, "Hy-Vee": 0, "Macy's": 8, "Sephora": 10, "Apple": 5}},'密尔沃基':{total:95,stores:{"Best Buy": 3, "Lululemon": 1, "Target": 8, "Lowe's": 3, "Home Depot": 4, "Whole Foods": 1, "Dollar Tree": 15, "Dollar General": 38, "Family Dollar": 18, "Hy-Vee": 0, "Macy's": 1, "Sephora": 2, "Apple": 1}},'麦迪逊':{total:43,stores:{"Best Buy": 1, "Lululemon": 0, "Target": 3, "Lowe's": 2, "Home Depot": 2, "Whole Foods": 0, "Dollar Tree": 7, "Dollar General": 17, "Family Dollar": 8, "Hy-Vee": 0, "Macy's": 1, "Sephora": 1, "Apple": 1}},'明尼阿波利斯':{total:227,stores:{"Best Buy": 7, "Lululemon": 1, "Target": 18, "Lowe's": 8, "Home Depot": 9, "Whole Foods": 2, "Dollar Tree": 37, "Dollar General": 92, "Family Dollar": 44, "Hy-Vee": 0, "Macy's": 3, "Sephora": 4, "Apple": 2}},'得梅因':{total:44,stores:{"Best Buy": 1, "Lululemon": 0, "Target": 3, "Lowe's": 2, "Home Depot": 2, "Whole Foods": 0, "Dollar Tree": 7, "Dollar General": 18, "Family Dollar": 8, "Hy-Vee": 0, "Macy's": 1, "Sephora": 1, "Apple": 1}},'堪萨斯城':{total:136,stores:{"Best Buy": 4, "Lululemon": 1, "Target": 11, "Lowe's": 5, "Home Depot": 6, "Whole Foods": 1, "Dollar Tree": 22, "Dollar General": 55, "Family Dollar": 26, "Hy-Vee": 0, "Macy's": 2, "Sephora": 2, "Apple": 1}},'俄克拉荷马城':{total:87,stores:{"Best Buy": 3, "Lululemon": 1, "Target": 7, "Lowe's": 3, "Home Depot": 3, "Whole Foods": 1, "Dollar Tree": 14, "Dollar General": 35, "Family Dollar": 17, "Hy-Vee": 0, "Macy's": 1, "Sephora": 1, "Apple": 1}},'塔尔萨':{total:62,stores:{"Best Buy": 2, "Lululemon": 0, "Target": 5, "Lowe's": 2, "Home Depot": 2, "Whole Foods": 1, "Dollar Tree": 10, "Dollar General": 25, "Family Dollar": 12, "Hy-Vee": 0, "Macy's": 1, "Sephora": 1, "Apple": 1}},'小石城':{total:49,stores:{"Best Buy": 2, "Lululemon": 0, "Target": 4, "Lowe's": 2, "Home Depot": 2, "Whole Foods": 0, "Dollar Tree": 8, "Dollar General": 19, "Family Dollar": 9, "Hy-Vee": 0, "Macy's": 1, "Sephora": 1, "Apple": 1}},'圣路易斯':{total:174,stores:{"Best Buy": 6, "Lululemon": 1, "Target": 14, "Lowe's": 6, "Home Depot": 7, "Whole Foods": 2, "Dollar Tree": 28, "Dollar General": 70, "Family Dollar": 34, "Hy-Vee": 0, "Macy's": 2, "Sephora": 3, "Apple": 1}},'印第安纳波利斯':{total:124,stores:{"Best Buy": 4, "Lululemon": 1, "Target": 10, "Lowe's": 4, "Home Depot": 5, "Whole Foods": 1, "Dollar Tree": 20, "Dollar General": 50, "Family Dollar": 24, "Hy-Vee": 0, "Macy's": 2, "Sephora": 2, "Apple": 1}},};
 var cities=[{"name": "路易维尔", "label": "🏠 出发", "lat": 38.2133, "lng": -85.7577}, {"name": "辛辛那提", "label": "Day 1", "lat": 39.1013, "lng": -84.5127}, {"name": "哥伦布", "label": "Day 2", "lat": 39.9623, "lng": -83.0007}, {"name": "克利夫兰", "label": "Day 3", "lat": 41.4997, "lng": -81.6937}, {"name": "底特律", "label": "Day 4", "lat": 42.3316, "lng": -83.0466}, {"name": "大急流城", "label": "Day 5", "lat": 42.9632, "lng": -85.6679}, {"name": "芝加哥", "label": "Day 5-6", "lat": 41.8756, "lng": -87.6244}, {"name": "密尔沃基", "label": "Day 7", "lat": 43.0386, "lng": -87.9091}, {"name": "麦迪逊", "label": "Day 8", "lat": 43.0803, "lng": -89.431}, {"name": "明尼阿波利斯", "label": "Day 8-9", "lat": 44.9773, "lng": -93.2655}, {"name": "得梅因", "label": "Day 10", "lat": 41.5869, "lng": -93.6249}, {"name": "堪萨斯城", "label": "Day 10", "lat": 39.1001, "lng": -94.5781}, {"name": "俄克拉荷马城", "label": "Day 11", "lat": 35.473, "lng": -97.5171}, {"name": "塔尔萨", "label": "Day 12", "lat": 36.1563, "lng": -95.9928}, {"name": "小石城", "label": "Day 12", "lat": 34.7465, "lng": -92.2896}, {"name": "孟菲斯", "label": "Day 13", "lat": 35.146, "lng": -90.0518}, {"name": "纳什维尔", "label": "Day 14", "lat": 36.1623, "lng": -86.7743}, {"name": "查塔努加", "label": "Day 15", "lat": 35.0457, "lng": -85.3095}, {"name": "诺克斯维尔", "label": "Day 16", "lat": 35.9516, "lng": -83.9309}, {"name": "圣路易斯", "label": "Day 17", "lat": 38.6472, "lng": -90.3084}, {"name": "印第安纳波利斯", "label": "Day 18", "lat": 39.7683, "lng": -86.1584}, {"name": "路易维尔", "label": "🏠 回家", "lat": 38.2133, "lng": -85.7577}];
+var segDist={"路易维尔,辛辛那提": [102, 117], "辛辛那提,哥伦布": [109, 133], "哥伦布,克利夫兰": [142, 162], "克利夫兰,底特律": [169, 194], "底特律,大急流城": [161, 177], "大急流城,芝加哥": [176, 205], "芝加哥,密尔沃基": [89, 112], "密尔沃基,麦迪逊": [81, 103], "麦迪逊,明尼阿波利斯": [266, 312], "明尼阿波利斯,得梅因": [244, 270], "得梅因,堪萨斯城": [193, 214], "堪萨斯城,俄克拉荷马城": [352, 361], "俄克拉荷马城,塔尔萨": [107, 113], "塔尔萨,小石城": [273, 284], "小石城,孟菲斯": [137, 146], "孟菲斯,纳什维尔": [210, 235], "纳什维尔,查塔努加": [131, 149], "查塔努加,诺克斯维尔": [111, 129], "诺克斯维尔,圣路易斯": [492, 544], "圣路易斯,印第安纳波利斯": [250, 284], "印第安纳波利斯,路易维尔": [117, 133]};
+var cityStores={"路易维尔": {"total": 81, "stores": {"Best Buy": 3, "Lululemon": 1, "Target": 6, "Lowe's": 3, "Home Depot": 3, "Whole Foods": 1, "Dollar Tree": 13, "Dollar General": 32, "Family Dollar": 16, "Hy-Vee": 0, "Macy's": 1, "Sephora": 1, "Apple": 1}}, "辛辛那提": {"total": 136, "stores": {"Best Buy": 4, "Lululemon": 1, "Target": 11, "Lowe's": 5, "Home Depot": 6, "Whole Foods": 1, "Dollar Tree": 22, "Dollar General": 55, "Family Dollar": 26, "Hy-Vee": 0, "Macy's": 2, "Sephora": 2, "Apple": 1}}, "哥伦布": {"total": 129, "stores": {"Best Buy": 4, "Lululemon": 1, "Target": 10, "Lowe's": 5, "Home Depot": 5, "Whole Foods": 1, "Dollar Tree": 21, "Dollar General": 52, "Family Dollar": 25, "Hy-Vee": 0, "Macy's": 2, "Sephora": 2, "Apple": 1}}, "克利夫兰": {"total": 124, "stores": {"Best Buy": 4, "Lululemon": 1, "Target": 10, "Lowe's": 4, "Home Depot": 5, "Whole Foods": 1, "Dollar Tree": 20, "Dollar General": 50, "Family Dollar": 24, "Hy-Vee": 0, "Macy's": 2, "Sephora": 2, "Apple": 1}}, "底特律": {"total": 269, "stores": {"Best Buy": 9, "Lululemon": 2, "Target": 21, "Lowe's": 10, "Home Depot": 11, "Whole Foods": 3, "Dollar Tree": 43, "Dollar General": 108, "Family Dollar": 52, "Hy-Vee": 0, "Macy's": 4, "Sephora": 4, "Apple": 2}}, "大急流城": {"total": 69, "stores": {"Best Buy": 2, "Lululemon": 0, "Target": 6, "Lowe's": 2, "Home Depot": 3, "Whole Foods": 1, "Dollar Tree": 11, "Dollar General": 28, "Family Dollar": 13, "Hy-Vee": 0, "Macy's": 1, "Sephora": 1, "Apple": 1}}, "芝加哥": {"total": 592, "stores": {"Best Buy": 19, "Lululemon": 4, "Target": 48, "Lowe's": 21, "Home Depot": 24, "Whole Foods": 6, "Dollar Tree": 95, "Dollar General": 238, "Family Dollar": 114, "Hy-Vee": 0, "Macy's": 8, "Sephora": 10, "Apple": 5}}, "密尔沃基": {"total": 95, "stores": {"Best Buy": 3, "Lululemon": 1, "Target": 8, "Lowe's": 3, "Home Depot": 4, "Whole Foods": 1, "Dollar Tree": 15, "Dollar General": 38, "Family Dollar": 18, "Hy-Vee": 0, "Macy's": 1, "Sephora": 2, "Apple": 1}}, "麦迪逊": {"total": 43, "stores": {"Best Buy": 1, "Lululemon": 0, "Target": 3, "Lowe's": 2, "Home Depot": 2, "Whole Foods": 0, "Dollar Tree": 7, "Dollar General": 17, "Family Dollar": 8, "Hy-Vee": 0, "Macy's": 1, "Sephora": 1, "Apple": 1}}, "明尼阿波利斯": {"total": 227, "stores": {"Best Buy": 7, "Lululemon": 1, "Target": 18, "Lowe's": 8, "Home Depot": 9, "Whole Foods": 2, "Dollar Tree": 37, "Dollar General": 92, "Family Dollar": 44, "Hy-Vee": 0, "Macy's": 3, "Sephora": 4, "Apple": 2}}, "得梅因": {"total": 44, "stores": {"Best Buy": 1, "Lululemon": 0, "Target": 3, "Lowe's": 2, "Home Depot": 2, "Whole Foods": 0, "Dollar Tree": 7, "Dollar General": 18, "Family Dollar": 8, "Hy-Vee": 0, "Macy's": 1, "Sephora": 1, "Apple": 1}}, "堪萨斯城": {"total": 136, "stores": {"Best Buy": 4, "Lululemon": 1, "Target": 11, "Lowe's": 5, "Home Depot": 6, "Whole Foods": 1, "Dollar Tree": 22, "Dollar General": 55, "Family Dollar": 26, "Hy-Vee": 0, "Macy's": 2, "Sephora": 2, "Apple": 1}}, "俄克拉荷马城": {"total": 87, "stores": {"Best Buy": 3, "Lululemon": 1, "Target": 7, "Lowe's": 3, "Home Depot": 3, "Whole Foods": 1, "Dollar Tree": 14, "Dollar General": 35, "Family Dollar": 17, "Hy-Vee": 0, "Macy's": 1, "Sephora": 1, "Apple": 1}}, "塔尔萨": {"total": 62, "stores": {"Best Buy": 2, "Lululemon": 0, "Target": 5, "Lowe's": 2, "Home Depot": 2, "Whole Foods": 1, "Dollar Tree": 10, "Dollar General": 25, "Family Dollar": 12, "Hy-Vee": 0, "Macy's": 1, "Sephora": 1, "Apple": 1}}, "小石城": {"total": 49, "stores": {"Best Buy": 2, "Lululemon": 0, "Target": 4, "Lowe's": 2, "Home Depot": 2, "Whole Foods": 0, "Dollar Tree": 8, "Dollar General": 19, "Family Dollar": 9, "Hy-Vee": 0, "Macy's": 1, "Sephora": 1, "Apple": 1}}, "孟菲斯": {"total": 81, "stores": {"Best Buy": 3, "Lululemon": 1, "Target": 6, "Lowe's": 3, "Home Depot": 3, "Whole Foods": 1, "Dollar Tree": 13, "Dollar General": 32, "Family Dollar": 16, "Hy-Vee": 0, "Macy's": 1, "Sephora": 1, "Apple": 1}}, "纳什维尔": {"total": 124, "stores": {"Best Buy": 4, "Lululemon": 1, "Target": 10, "Lowe's": 4, "Home Depot": 5, "Whole Foods": 1, "Dollar Tree": 20, "Dollar General": 50, "Family Dollar": 24, "Hy-Vee": 0, "Macy's": 2, "Sephora": 2, "Apple": 1}}, "查塔努加": {"total": 35, "stores": {"Best Buy": 1, "Lululemon": 0, "Target": 3, "Lowe's": 1, "Home Depot": 1, "Whole Foods": 0, "Dollar Tree": 6, "Dollar General": 14, "Family Dollar": 7, "Hy-Vee": 0, "Macy's": 0, "Sephora": 1, "Apple": 1}}, "诺克斯维尔": {"total": 56, "stores": {"Best Buy": 2, "Lululemon": 0, "Target": 4, "Lowe's": 2, "Home Depot": 2, "Whole Foods": 1, "Dollar Tree": 9, "Dollar General": 22, "Family Dollar": 11, "Hy-Vee": 0, "Macy's": 1, "Sephora": 1, "Apple": 1}}, "圣路易斯": {"total": 174, "stores": {"Best Buy": 6, "Lululemon": 1, "Target": 14, "Lowe's": 6, "Home Depot": 7, "Whole Foods": 2, "Dollar Tree": 28, "Dollar General": 70, "Family Dollar": 34, "Hy-Vee": 0, "Macy's": 2, "Sephora": 3, "Apple": 1}}, "印第安纳波利斯": {"total": 124, "stores": {"Best Buy": 4, "Lululemon": 1, "Target": 10, "Lowe's": 4, "Home Depot": 5, "Whole Foods": 1, "Dollar Tree": 20, "Dollar General": 50, "Family Dollar": 24, "Hy-Vee": 0, "Macy's": 2, "Sephora": 2, "Apple": 1}}};
 
-var dayColors=['#007AFF','#34C759','#FF9500','#FF3B30','#AF52DE','#FF2D55','#5AC8FA','#5856D6','#FF6B35','#8E8E93','#007AFF','#34C759','#FF9500','#FF3B30'];
+var map=L.map('map').setView([39,-89],5);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:12}).addTo(map);
+
+var dayColors=['#007AFF','#34C759','#FF9500','#FF3B30','#AF52DE','#FF2D55','#5AC8FA','#5856D6','#FF6B35','#8E8E93','#007AFF','#34C759','#FF9500','#FF3B30','#AF52DE','#FF2D55','#5AC8FA','#5856D6','#FF6B35','#8E8E93','#007AFF'];
 var legendHtml='';
-var prev=null;
-var totalDist=0;
-var dayNum=1;
+var coords=[];
 
 cities.forEach(function(c,i){
+  coords.push([c.lat,c.lng]);
   var color=dayColors[i%dayColors.length];
   var isHome=c.label.indexOf('出发')!==-1||c.label.indexOf('回家')!==-1;
-  var m=L.circleMarker([c.lat,c.lng],{
-    radius:isHome?10:Math.min(7+Math.sqrt((cityStores[c.name]||{}).total||0)/5,18),
-    fillColor:color,color:'#fff',weight:2,fillOpacity:0.9
-  }).addTo(map);
+  var r=isHome?10:Math.min(8+Math.sqrt((cityStores[c.name]||{}).total||0)/4,20);
+  var m=L.circleMarker([c.lat,c.lng],{radius:r,fillColor:color,color:'#fff',weight:2,fillOpacity:0.9}).addTo(map);
   
   var pop='<b>'+c.name+'</b><br>'+c.label;
-  if(i>0)var key2=cities[i-1].name+','+c.name;
-    var rd=segDist[key2];
-    var popDist=rd?rd[0]+'mi / '+Math.round(rd[0]*1.609)+'km':(prevDist(cities[i-1],c)*1.609).toFixed(0)+'km';
-    pop+='<br>← '+popDist;
+  if(i>0){
+    var key=cities[i-1].name+','+c.name;
+    var rd=segDist[key];
+    if(rd)pop+='<br>← '+rd[0]+'mi / '+Math.round(rd[0]*1.609)+'km 🚗 '+Math.floor(rd[1]/60)+'h'+(rd[1]%60)+'min';
+  }
   
   var cs=cityStores[c.name];
   if(cs&&!isHome){
-    pop+='<br><table style="font-size:11px;border-collapse:collapse;margin-top:4px">';
-    pop+='<tr style="background:#f5f5f5"><td colspan=2 style="text-align:center;font-weight:700;padding:4px">预估 '+cs.total+' 家店</td></tr>';
-    var chains=['Best Buy','Lululemon','Target',"Lowe's",'Home Depot','Whole Foods','Dollar Tree','Dollar General','Family Dollar',"Macy's",'Sephora','Apple'];
-    for(var k=0;k<chains.length;k++){
-      var v=cs.stores[chains[k]]||0;
-      var bg=v===0?'#fff5f5':'';
-      pop+='<tr style="background:'+bg+'"><td style="padding:2px 8px;text-align:right;font-weight:500">'+chains[k]+'</td><td style="padding:2px 8px;text-align:center">'+(v||'—')+'</td></tr>';
-    }
+    pop+='<br><table style="font-size:10px;border-collapse:collapse;margin-top:4px">';
+    pop+='<tr style="background:#f5f5f5"><td colspan=2 style="text-align:center;font-weight:700;padding:3px">'+cs.total+'家店</td></tr>';
+    var chn=['Best Buy','Lululemon','Target',"Lowe's",'Home Depot','Whole Foods','Dollar Tree','Dollar General','Family Dollar',"Macy's",'Sephora','Apple'];
+    chn.forEach(function(k){
+      var v=cs.stores[k]||0;
+      pop+='<tr style="background:'+(v===0?'#fff5f5':'')+'"><td style="padding:1px 6px;text-align:right">'+k+'</td><td style="padding:1px 6px;text-align:center;font-weight:600">'+(v||'—')+'</td></tr>';
+    });
     pop+='</table>';
   }
   m.bindPopup(pop);
-  m.bindTooltip('<b>'+c.name+'</b>',{permanent:true,direction:'top',offset:[0,-5],className:'city-label',opacity:0.9});
+  m.bindTooltip('<b>'+c.name+'</b>',{permanent:true,direction:'top',offset:[0,-5],opacity:0.9});
   
-  var cs2=cityStores[c.name];
-  var storeStr=cs2?' ['+cs2.total+'家]':'';
-  legendHtml+='<div class="day"><span class="dot" style="background:'+color+'"></span> '+c.label+' — <b>'+c.name+'</b>'+storeStr+'</div>';
+  var sCount=cityStores[c.name]?cityStores[c.name].total:0;
+  legendHtml+='<div class="day"><span class="dot" style="background:'+color+'"></span> '+c.label+' — <b>'+c.name+'</b> ['+sCount+'家]</div>';
 });
 
-function prevDist(a,b){
-  var dx=(a.lat-b.lat)*69,dy=(a.lng-b.lng)*54.6;
-  return Math.sqrt(dx*dx+dy*dy);
-}
+// Route line
+L.polyline(coords,{color:'#007AFF',weight:3,opacity:0.5,dashArray:'8,8'}).addTo(map);
+map.fitBounds(L.polyline(coords).getBounds(),{padding:[30,30]});
 
-// Draw route polyline
-var coords=cities.map(function(c){return [c.lat,c.lng];});
-var poly=L.polyline(coords,{color:'#007AFF',weight:3,opacity:0.5,dashArray:'8,8'}).addTo(map);
-map.fitBounds(poly.getBounds(),{padding:[30,30]});
-
-// Add distance+time labels on each segment
+// Segment labels
 cities.forEach(function(c,i){
   if(i===0)return;
   var prev=cities[i-1];
   var key=prev.name+','+c.name;
-  var realDist=segDist[key];
-  var distMi=realDist?realDist[0]:prevDist(prev,c);
-  var timeMin=realDist?realDist[1]:Math.round(prevDist(prev,c)/60*60);
-  var distKm=distMi*1.609;
-  var distStr=distMi.toFixed(0)+'mi';
-  var h=Math.floor(timeMin/60);
-  var m=Math.round(timeMin%60);
-  var timeStr=h+'h'+(m>0?m+'min':'');
-  
-  var midLat=(prev.lat+c.lat)/2;
-  var midLng=(prev.lng+c.lng)/2;
-  
+  var rd=segDist[key];
+  var distMi=rd?rd[0]:0;
+  var timeMin=rd?rd[1]:0;
+  if(!rd)return;
+  var h=Math.floor(timeMin/60),m=timeMin%60;
   var label=L.divIcon({
     className:'segment-label',
-    html:'<div style="background:rgba(255,255,255,0.9);padding:3px 8px;border-radius:10px;font-size:10px;font-weight:600;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,0.15);color:#007AFF;text-align:center">'+distStr+'<br><span style="font-size:9px;color:#666">🚗 '+timeStr+'</span></div>',
-    iconSize:[0,0],
-    iconAnchor:[35,0]
+    html:'<div style="background:rgba(255,255,255,0.92);padding:3px 8px;border-radius:10px;font-size:10px;font-weight:600;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,0.15);color:#007AFF;text-align:center">'+distMi+'mi<br><span style="font-size:9px;color:#666">🚗 '+h+'h'+(m>0?m+'min':'')+'</span></div>',
+    iconSize:[0,0],iconAnchor:[35,0]
   });
-  L.marker([midLat,midLng],{icon:label}).addTo(map);
+  L.marker([(prev.lat+c.lat)/2,(prev.lng+c.lng)/2],{icon:label}).addTo(map);
 });
 
 document.getElementById('legend').innerHTML=legendHtml;
