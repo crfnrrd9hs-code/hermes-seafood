@@ -23,6 +23,11 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC'
 #legend .day{margin:4px 0;display:flex;align-items:center;gap:6px}
 #legend .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
 .leaflet-popup-content{font-size:13px;line-height:1.6}
+.city-label{
+  background:rgba(255,255,255,0.85);border:none;box-shadow:0 1px 4px rgba(0,0,0,0.15);
+  padding:2px 8px;border-radius:8px;font-size:12px;color:#1C1C1E;
+  white-space:nowrap;pointer-events:none
+}
 </style>
 </head>
 <body>
@@ -67,6 +72,7 @@ cities.forEach(function(c,i){
     }
   }
   m.bindPopup(pop);
+  m.bindTooltip('<b>'+c.name+'</b>',{permanent:true,direction:'top',offset:[0,-5],className:'city-label',opacity:0.9});
   
   var cs2=cityStores[c.name];
   var storeStr=cs2?' ['+cs2.total+'家]':'';
