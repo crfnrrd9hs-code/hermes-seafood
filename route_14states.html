@@ -27,15 +27,15 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC'
 </head>
 <body>
 <div id="map"></div>
-<div id="info">🚗 路易维尔出发 → 14州大环线 · 15城 · 3,300英里</div>
+<div id="info">🚗 路易维尔出发 → 14州大环线 · 15城 · 约5,300公里</div>
 <div id="legend"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 var map=L.map('map',{zoomControl:true}).setView([41,-89],5);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:12}).addTo(map);
+L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',{subdomains:'1234',maxZoom:12,attribution:'高德地图'}).addTo(map);
 
-var cities=[{"name": "Louisville", "label": "🏠 出发", "lat": 38.2133224, "lng": -85.7577075}, {"name": "Cincinnati", "label": "Day 1", "lat": 39.1012809, "lng": -84.5127405}, {"name": "Columbus", "label": "Day 2", "lat": 39.9622601, "lng": -83.0007065}, {"name": "Cleveland", "label": "Day 3", "lat": 41.4996574, "lng": -81.6936772}, {"name": "Detroit", "label": "Day 4", "lat": 42.3315509, "lng": -83.0466403}, {"name": "Chicago", "label": "Day 5-6", "lat": 41.8755616, "lng": -87.6244212}, {"name": "Milwaukee", "label": "Day 7", "lat": 43.0386475, "lng": -87.9090751}, {"name": "Minneapolis", "label": "Day 8-9", "lat": 44.9772995, "lng": -93.2654692}, {"name": "Des Moines", "label": "Day 10", "lat": 41.5868654, "lng": -93.6249494}, {"name": "Kansas City", "label": "Day 10", "lat": 39.100105, "lng": -94.5781416}, {"name": "Oklahoma City", "label": "Day 11", "lat": 35.4729886, "lng": -97.5170536}, {"name": "Little Rock", "label": "Day 12", "lat": 34.7465071, "lng": -92.2896267}, {"name": "Memphis", "label": "Day 12", "lat": 35.146026, "lng": -90.0517786}, {"name": "St. Louis", "label": "Day 13", "lat": 38.6472402, "lng": -90.3084017}, {"name": "Louisville", "label": "🏠 回家", "lat": 38.2133224, "lng": -85.7577075}];
+var cities=[{"name": "路易维尔", "label": "🏠 出发", "lat": 38.2133224, "lng": -85.7577075}, {"name": "辛辛那提", "label": "Day 1", "lat": 39.1012809, "lng": -84.5127405}, {"name": "哥伦布", "label": "Day 2", "lat": 39.9622601, "lng": -83.0007065}, {"name": "克利夫兰", "label": "Day 3", "lat": 41.4996574, "lng": -81.6936772}, {"name": "底特律", "label": "Day 4", "lat": 42.3315509, "lng": -83.0466403}, {"name": "芝加哥", "label": "Day 5-6", "lat": 41.8755616, "lng": -87.6244212}, {"name": "密尔沃基", "label": "Day 7", "lat": 43.0386475, "lng": -87.9090751}, {"name": "明尼阿波利斯", "label": "Day 8-9", "lat": 44.9772995, "lng": -93.2654692}, {"name": "得梅因", "label": "Day 10", "lat": 41.5868654, "lng": -93.6249494}, {"name": "堪萨斯城", "label": "Day 10", "lat": 39.100105, "lng": -94.5781416}, {"name": "俄克拉荷马城", "label": "Day 11", "lat": 35.4729886, "lng": -97.5170536}, {"name": "小石城", "label": "Day 12", "lat": 34.7465071, "lng": -92.2896267}, {"name": "孟菲斯", "label": "Day 12", "lat": 35.146026, "lng": -90.0517786}, {"name": "圣路易斯", "label": "Day 13", "lat": 38.6472402, "lng": -90.3084017}, {"name": "路易维尔", "label": "🏠 回家", "lat": 38.2133224, "lng": -85.7577075}];
 
 var dayColors=['#007AFF','#34C759','#FF9500','#FF3B30','#AF52DE','#FF2D55','#5AC8FA','#5856D6','#FF6B35','#8E8E93','#007AFF','#34C759','#FF9500','#FF3B30'];
 var legendHtml='';
