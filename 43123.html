@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>43123 Grove City 店铺</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;width:100%;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif}
+#map{height:100%;width:100%}
+#info{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:1000;background:rgba(255,255,255,0.92);padding:8px 16px;border-radius:12px;font-size:13px;font-weight:600;box-shadow:0 2px 12px rgba(0,0,0,0.1)}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div id="info">📍 43123 Grove City, OH · 哥伦布南郊</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+var stores=[{"name": "Best Buy", "lat": 39.878316, "lng": -83.0574886, "color": "#1C1C1E"}, {"name": "Target", "lat": 39.8762466, "lng": -83.0398054, "color": "#FF0000"}, {"name": "Home Depot", "lat": 39.878316, "lng": -83.0574886, "color": "#FF6B35"}, {"name": "Staples", "lat": 39.878316, "lng": -83.0574886, "color": "#CC0000"}, {"name": "Dollar General", "lat": 39.9010187, "lng": -83.0780525, "color": "#FFD700"}, {"name": "Family Dollar", "lat": 39.8511522, "lng": -83.1196934, "color": "#FF9500"}];
+
+var map=L.map('map').setView([39.88,-83.07],14);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:16}).addTo(map);
+
+stores.forEach(function(s){
+  var m=L.circleMarker([s.lat,s.lng],{radius:9,fillColor:s.color,color:'#fff',weight:2,fillOpacity:0.9}).addTo(map);
+  m.bindPopup('<b>'+s.name+'</b>');
+  m.bindTooltip(s.name,{permanent:true,direction:'top',offset:[0,-5],opacity:0.9});
+});
+
+// Fit all markers
+var bounds=stores.map(function(s){return [s.lat,s.lng];});
+map.fitBounds(bounds,{padding:[40,40]});
+</script>
+</body>
+</html>
