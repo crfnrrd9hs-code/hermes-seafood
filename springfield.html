@@ -315,12 +315,15 @@ function initMap(){
   }).setView([37.189602,-93.292556],12);
   L.control.zoom({position:'bottomright'}).addTo(map);
   // Use OpenStreetMap tiles - globally distributed CDN, faster in most regions
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+  var tileServers=[{url:'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',opts:{
     maxZoom:17,
     updateWhenIdle:false,
     updateWhenZooming:false,
     keepBuffer:4
-  }).addTo(map);
+  },attr:'© OSM'},{url:'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',opts:{maxZoom:16,attribution:'© CartoDB'},attr:'© CartoDB'}];
+var tileLayer=L.tileLayer(tileServers[0].url,tileServers[0].opts).addTo(map);
+var tileIdx=0;
+tileLayer.on('tileerror',function(){tileIdx++;if(tileIdx<tileServers.length){map.removeLayer(tileLayer);tileLayer=L.tileLayer(tileServers[tileIdx].url,tileServers[tileIdx].opts).addTo(map);}});
 }
 function renderMap(){
   if(!map){document.getElementById('map').classList.add('loading');initMap();document.getElementById('map').classList.remove('loading');}
