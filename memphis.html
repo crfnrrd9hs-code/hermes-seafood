@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Memphis">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="leaflet.css" />
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -278,7 +278,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Displ
   <div class="toast" id="toast"></div>
 </div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
 var CAT_COLORS={"大型零售":"#FF9500","电子产品":"#1C1C1E","家居装修":"#5AC8FA","折扣店":"#34C759","百货":"#FF2D55","美妆":"#AF52DE","超市":"#007AFF"};
@@ -315,7 +315,7 @@ function initMap(){
   }).setView([35.099994,-89.875773],11);
   L.control.zoom({position:'bottomright'}).addTo(map);
   // Use OpenStreetMap tiles - globally distributed CDN, faster in most regions
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
     maxZoom:17,
     updateWhenIdle:false,
     updateWhenZooming:false,
